@@ -3,7 +3,7 @@ import { countExpansionCreeps, getExpansionTargetRoom, isExpansionReady } from "
 import { roomHasRepairTargets } from "./repair";
 import { getNextScoutTarget, shouldSpawnScout } from "./scouting";
 
-const ROLE_PRIORITY: CreepRole[] = ["defender", "miner", "hauler", "upgrader", "builder", "repairer"];
+const ROLE_PRIORITY: CreepRole[] = ["defender", "miner", "hauler", "builder", "upgrader", "repairer"];
 
 interface SpawnRequest {
   role: CreepRole;
@@ -59,7 +59,7 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
     harvester: 0,
     miner: desiredMinerCount(room),
     hauler: sources.length > 0 ? Math.max(1, sources.length) : 0,
-    upgrader: 1,
+    upgrader: desiredUpgraderCount(room),
     builder: desiredBuilderCount(room),
     repairer: roomHasRepairTargets(room) ? 1 : 0,
     defender: roomNeedsDefender(room) ? 1 : 0,
@@ -209,12 +209,46 @@ function walkableAdjacentPositions(position: RoomPosition): number {
 }
 
 function desiredBuilderCount(room: Room): number {
-  const sites = room.find(FIND_CONSTRUCTION_SITES).length;
-  if (sites === 0) {
+  const sites = room.find(FIND_CONSTRUCTION_SITES);
+  if (sites.length === 0) {
     return 0;
   }
 
-  return sites >= 5 && room.energyCapacityAvailable >= 550 ? 2 : 1;
+  const importantSites = sites.filter(site => isImportantConstruction(site)).length;
+  if (importantSites > 0 && room.energyAvailable >= room.energyCapacityAvailable * 0.8) {
+    return 2;
+  }
+
+  if (sites.length >= 8 && room.energyCapacityAvailable >= 550) {
+    return 2;
+  }
+
+  return 1;
+}
+
+function desiredUpgraderCount(room: Room): number {
+  if (hasImportantConstruction(room)) {
+    return 1;
+  }
+
+  if (room.energyAvailable >= room.energyCapacityAvailable * 0.8 && room.energyCapacityAvailable >= 550) {
+    return 2;
+  }
+
+  return 1;
+}
+
+function hasImportantConstruction(room: Room): boolean {
+  return room.find(FIND_CONSTRUCTION_SITES, {
+    filter: isImportantConstruction
+  }).length > 0;
+}
+
+function isImportantConstruction(site: ConstructionSite): boolean {
+  return site.structureType === STRUCTURE_EXTENSION ||
+    site.structureType === STRUCTURE_TOWER ||
+    site.structureType === STRUCTURE_CONTAINER ||
+    site.structureType === STRUCTURE_STORAGE;
 }
 
 function chooseBody(role: CreepRole, energyAvailable: number): BodyPartConstant[] | undefined {

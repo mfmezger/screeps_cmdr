@@ -60,6 +60,10 @@ function repairPriority(structure: Structure, kind: RepairKind): number | undefi
 }
 
 function creepRepairThreshold(structure: Structure): number {
+  if (hasImportantConstruction(structure.room)) {
+    return earlyRepairThreshold(structure);
+  }
+
   if (structure.structureType === STRUCTURE_CONTAINER) {
     return 0.8;
   }
@@ -71,7 +75,23 @@ function creepRepairThreshold(structure: Structure): number {
   return 0.5;
 }
 
+function earlyRepairThreshold(structure: Structure): number {
+  if (structure.structureType === STRUCTURE_CONTAINER) {
+    return 0.55;
+  }
+
+  if (structure.structureType === STRUCTURE_ROAD) {
+    return 0.3;
+  }
+
+  return 0.4;
+}
+
 function towerRepairThreshold(structure: Structure): number {
+  if (hasImportantConstruction(structure.room)) {
+    return 0.25;
+  }
+
   if (structure.structureType === STRUCTURE_CONTAINER) {
     return 0.6;
   }
@@ -81,4 +101,14 @@ function towerRepairThreshold(structure: Structure): number {
   }
 
   return 0.4;
+}
+
+function hasImportantConstruction(room: Room): boolean {
+  return room.find(FIND_CONSTRUCTION_SITES, {
+    filter: site =>
+      site.structureType === STRUCTURE_EXTENSION ||
+      site.structureType === STRUCTURE_TOWER ||
+      site.structureType === STRUCTURE_CONTAINER ||
+      site.structureType === STRUCTURE_STORAGE
+  }).length > 0;
 }

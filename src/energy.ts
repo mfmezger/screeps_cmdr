@@ -43,7 +43,7 @@ export function collectEnergy(creep: Creep, options: CollectEnergyOptions = {}):
     return;
   }
 
-  if (withdrawFromContainer(creep)) {
+  if (withdrawFromContainer(creep, 100) || withdrawFromContainer(creep, 1)) {
     return;
   }
 
@@ -116,11 +116,11 @@ function withdrawFromStorage(creep: Creep): boolean {
   return true;
 }
 
-function withdrawFromContainer(creep: Creep): boolean {
+function withdrawFromContainer(creep: Creep, minEnergy: number): boolean {
   const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
     filter: (structure): structure is StructureContainer =>
       structure.structureType === STRUCTURE_CONTAINER &&
-      structure.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+      structure.store.getUsedCapacity(RESOURCE_ENERGY) >= minEnergy
   });
 
   if (!target) {

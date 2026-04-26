@@ -1,6 +1,7 @@
 const PLAN_INTERVAL = 100;
-const MAX_NEW_SITES_PER_RUN = 5;
-const MAX_ROOM_SITES = 25;
+const MAX_NEW_SITES_PER_RUN = 3;
+const MAX_ROOM_SITES = 12;
+const ROAD_SITE_BACKLOG_LIMIT = 8;
 
 export function runRoomPlanning(room: Room): void {
   if (Game.time % PLAN_INTERVAL !== 0) {
@@ -11,22 +12,39 @@ export function runRoomPlanning(room: Room): void {
     return;
   }
 
-  let remainingSites = Math.max(0, MAX_ROOM_SITES - room.find(FIND_CONSTRUCTION_SITES).length);
+  const siteCount = room.find(FIND_CONSTRUCTION_SITES).length;
+  let remainingSites = Math.max(0, MAX_ROOM_SITES - siteCount);
   remainingSites = Math.min(remainingSites, MAX_NEW_SITES_PER_RUN);
 
   if (remainingSites === 0) {
     return;
   }
 
-  remainingSites -= planSourceContainers(room, remainingSites);
   remainingSites -= planExtensions(room, remainingSites);
   remainingSites -= planTower(room, remainingSites);
+  remainingSites -= planSourceContainers(room, remainingSites);
   remainingSites -= planStorage(room, remainingSites);
   remainingSites -= planExtractor(room, remainingSites);
 
-  if (remainingSites > 0) {
+  if (remainingSites > 0 && shouldPlanRoads(room)) {
     planRoads(room, remainingSites);
   }
+}
+
+function shouldPlanRoads(room: Room): boolean {
+  if (room.find(FIND_CONSTRUCTION_SITES).length >= ROAD_SITE_BACKLOG_LIMIT) {
+    return false;
+  }
+
+  if (!allAllowedStructuresPlanned(room, STRUCTURE_EXTENSION)) {
+    return false;
+  }
+
+  if (room.controller && room.controller.level >= 3 && !allAllowedStructuresPlanned(room, STRUCTURE_TOWER)) {
+    return false;
+  }
+
+  return true;
 }
 
 function planSourceContainers(room: Room, maxSites: number): number {
@@ -202,6 +220,10 @@ function chooseContainerPosition(source: Source, anchor: RoomPosition | undefine
   }
 
   return positions.sort((left, right) => left.getRangeTo(anchor) - right.getRangeTo(anchor))[0];
+}
+
+function allAllowedStructuresPlanned(room: Room, structureType: BuildableStructureConstant): boolean {
+  return plannedOrBuiltCount(room, structureType) >= allowedStructureCount(room, structureType);
 }
 
 function allowedStructureCount(room: Room, structureType: BuildableStructureConstant): number {

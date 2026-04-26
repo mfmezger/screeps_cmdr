@@ -16,14 +16,14 @@ Minimal TypeScript bot for the Screeps game.
   - defender when hostiles are present and no tower exists
 - Towers attack hostile creeps, then repair if they have spare energy.
 - Defense activates safe mode when dangerous hostiles appear and there are no towers.
-- Room planning follows simple RCL priorities: containers/roads, extensions, tower, storage, extractor.
+- Room planning prioritizes speed: extensions first, then tower, containers, storage/extractor, and roads only when the backlog is low.
 - Creeps gather energy from dropped energy, tombstones, ruins, containers, then active sources.
 - Creeps that harvest directly remember an assigned source to reduce crowding.
 - Miners harvest assigned sources and put energy into adjacent containers or drop it for haulers.
 - Haulers fill spawns/extensions first, then towers, then storage, then upgrade if there is nowhere to deliver energy.
 - Upgraders prefer storage/stored/dropped energy and upgrade the room controller.
-- Builders prefer storage/stored/dropped energy and build construction sites, then upgrade if there is nothing to build.
-- Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures.
+- Builders prefer storage/stored/dropped energy and build high-value construction first: extensions, towers, containers/storage, then roads.
+- Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures, with lower repair thresholds while important construction exists.
 - Draws lightweight room visuals for creep roles, source assignments, energy, and expansion target.
 - Writes current status and rolling history into `Memory.stats` for external inspection.
 - Automatic expansion support:
@@ -32,7 +32,7 @@ Minimal TypeScript bot for the Screeps game.
   - picks a safe two-source unowned room when available
   - spawns a claimer and pioneers once the home room is ready
   - manual flags named `Expand` or `Claim` still override the automatic target
-- Uses a simple spawn queue so emergency, economy, defense, expansion, and scouting requests are prioritized consistently.
+- Uses a simple spawn queue so emergency, economy, construction, defense, expansion, and scouting requests are prioritized consistently.
 
 ## Commands
 
