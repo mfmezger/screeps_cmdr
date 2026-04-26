@@ -1,7 +1,16 @@
 export {};
 
 declare global {
-  type CreepRole = "harvester" | "miner" | "hauler" | "upgrader" | "builder" | "repairer";
+  type CreepRole =
+    | "harvester"
+    | "miner"
+    | "hauler"
+    | "upgrader"
+    | "builder"
+    | "repairer"
+    | "defender"
+    | "claimer"
+    | "pioneer";
 
   const console: {
     log(message?: unknown, ...optionalParams: unknown[]): void;
@@ -14,6 +23,9 @@ declare global {
     upgrader: number;
     builder: number;
     repairer: number;
+    defender: number;
+    claimer: number;
+    pioneer: number;
   }
 
   interface SourceStatsSnapshot {
@@ -47,6 +59,7 @@ declare global {
       capacity: number;
     };
     sources: SourceStatsSnapshot[];
+    expansionReady: boolean;
   }
 
   interface BotStatsSnapshot {
@@ -74,6 +87,7 @@ declare global {
     role: CreepRole;
     working?: boolean;
     sourceId?: Id<Source>;
+    targetRoom?: string;
   }
 
   interface Memory {

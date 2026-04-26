@@ -1,3 +1,5 @@
+import { isExpansionReady } from "./expansion";
+
 const HISTORY_INTERVAL = 20;
 const MAX_HISTORY = 250;
 
@@ -88,7 +90,8 @@ function buildRoomStats(room: Room): RoomStatsSnapshot {
       energy: source.energy,
       energyCapacity: source.energyCapacity,
       assignedCreeps: Object.values(Game.creeps).filter(creep => creep.memory.sourceId === source.id).length
-    }))
+    })),
+    expansionReady: isExpansionReady(room)
   };
 }
 
@@ -99,7 +102,10 @@ function countCreepsByRole(creeps: Creep[]): Record<CreepRole, number> {
     hauler: creeps.filter(creep => creep.memory.role === "hauler").length,
     upgrader: creeps.filter(creep => creep.memory.role === "upgrader").length,
     builder: creeps.filter(creep => creep.memory.role === "builder").length,
-    repairer: creeps.filter(creep => creep.memory.role === "repairer").length
+    repairer: creeps.filter(creep => creep.memory.role === "repairer").length,
+    defender: creeps.filter(creep => creep.memory.role === "defender").length,
+    claimer: creeps.filter(creep => creep.memory.role === "claimer").length,
+    pioneer: creeps.filter(creep => creep.memory.role === "pioneer").length
   };
 }
 

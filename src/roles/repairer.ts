@@ -1,11 +1,11 @@
-import { collectEnergy, updateWorkingState } from "../energy";
+import { collectWorkerEnergy, updateWorkingState } from "../energy";
 import { findRepairTarget } from "../repair";
 
 export function runRepairer(creep: Creep): void {
   updateWorkingState(creep);
 
   if (!creep.memory.working) {
-    collectEnergy(creep);
+    collectWorkerEnergy(creep);
     return;
   }
 

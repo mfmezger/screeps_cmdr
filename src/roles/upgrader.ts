@@ -1,10 +1,10 @@
-import { collectEnergy, updateWorkingState } from "../energy";
+import { collectWorkerEnergy, updateWorkingState } from "../energy";
 
 export function runUpgrader(creep: Creep): void {
   updateWorkingState(creep);
 
   if (!creep.memory.working) {
-    collectEnergy(creep);
+    collectWorkerEnergy(creep);
     return;
   }
 

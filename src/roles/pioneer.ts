@@ -1,10 +1,20 @@
-import { collectWorkerEnergy, updateWorkingState } from "../energy";
+import { collectEnergy, updateWorkingState } from "../energy";
 
-export function runBuilder(creep: Creep): void {
+export function runPioneer(creep: Creep): void {
+  const targetRoom = creep.memory.targetRoom;
+  if (!targetRoom) {
+    return;
+  }
+
+  if (creep.room.name !== targetRoom) {
+    creep.moveTo(new RoomPosition(25, 25, targetRoom), { visualizePathStyle: { stroke: "#ffffff" } });
+    return;
+  }
+
   updateWorkingState(creep);
 
   if (!creep.memory.working) {
-    collectWorkerEnergy(creep);
+    collectEnergy(creep);
     return;
   }
 

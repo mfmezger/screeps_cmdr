@@ -19,11 +19,14 @@ export function runRoomPlanning(room: Room): void {
   }
 
   remainingSites -= planSourceContainers(room, remainingSites);
-  if (remainingSites === 0) {
-    return;
-  }
+  remainingSites -= planExtensions(room, remainingSites);
+  remainingSites -= planTower(room, remainingSites);
+  remainingSites -= planStorage(room, remainingSites);
+  remainingSites -= planExtractor(room, remainingSites);
 
-  planRoads(room, remainingSites);
+  if (remainingSites > 0) {
+    planRoads(room, remainingSites);
+  }
 }
 
 function planSourceContainers(room: Room, maxSites: number): number {
@@ -42,6 +45,84 @@ function planSourceContainers(room: Room, maxSites: number): number {
     const position = chooseContainerPosition(source, anchor);
     if (position && position.createConstructionSite(STRUCTURE_CONTAINER) === OK) {
       created += 1;
+    }
+  }
+
+  return created;
+}
+
+function planExtensions(room: Room, maxSites: number): number {
+  if (maxSites <= 0 || !room.controller || room.controller.level < 2) {
+    return 0;
+  }
+
+  return planStructureNearSpawn(room, STRUCTURE_EXTENSION, maxSites, 3);
+}
+
+function planTower(room: Room, maxSites: number): number {
+  if (maxSites <= 0 || !room.controller || room.controller.level < 3) {
+    return 0;
+  }
+
+  return planStructureNearSpawn(room, STRUCTURE_TOWER, maxSites, 4);
+}
+
+function planStorage(room: Room, maxSites: number): number {
+  if (maxSites <= 0 || !room.controller || room.controller.level < 4) {
+    return 0;
+  }
+
+  return planStructureNearSpawn(room, STRUCTURE_STORAGE, maxSites, 4);
+}
+
+function planExtractor(room: Room, maxSites: number): number {
+  if (maxSites <= 0 || !room.controller || room.controller.level < 6) {
+    return 0;
+  }
+
+  if (plannedOrBuiltCount(room, STRUCTURE_EXTRACTOR) >= allowedStructureCount(room, STRUCTURE_EXTRACTOR)) {
+    return 0;
+  }
+
+  const mineral = room.find(FIND_MINERALS)[0];
+  if (!mineral || !canBuildStructure(mineral.pos)) {
+    return 0;
+  }
+
+  return mineral.pos.createConstructionSite(STRUCTURE_EXTRACTOR) === OK ? 1 : 0;
+}
+
+function planStructureNearSpawn(
+  room: Room,
+  structureType: BuildableStructureConstant,
+  maxSites: number,
+  range: number
+): number {
+  const spawn = getPrimarySpawn(room);
+  if (!spawn) {
+    return 0;
+  }
+
+  const allowed = allowedStructureCount(room, structureType);
+  const existing = plannedOrBuiltCount(room, structureType);
+  let remainingForType = Math.min(maxSites, allowed - existing);
+  if (remainingForType <= 0) {
+    return 0;
+  }
+
+  let created = 0;
+  const positions = getPositionsInRange(spawn.pos, range)
+    .filter(canBuildStructure)
+    .sort((left, right) => left.getRangeTo(spawn) - right.getRangeTo(spawn));
+
+  for (const position of positions) {
+    if (remainingForType <= 0) {
+      return created;
+    }
+
+    if (position.createConstructionSite(structureType) === OK) {
+      created += 1;
+      remainingForType -= 1;
     }
   }
 
@@ -111,7 +192,7 @@ function hasNearbyContainerOrSite(source: Source): boolean {
 }
 
 function chooseContainerPosition(source: Source, anchor: RoomPosition | undefined): RoomPosition | undefined {
-  const positions = getAdjacentPositions(source.pos).filter(canBuildContainer);
+  const positions = getAdjacentPositions(source.pos).filter(canBuildStructure);
   if (positions.length === 0) {
     return undefined;
   }
@@ -123,11 +204,34 @@ function chooseContainerPosition(source: Source, anchor: RoomPosition | undefine
   return positions.sort((left, right) => left.getRangeTo(anchor) - right.getRangeTo(anchor))[0];
 }
 
+function allowedStructureCount(room: Room, structureType: BuildableStructureConstant): number {
+  if (!room.controller) {
+    return 0;
+  }
+
+  return CONTROLLER_STRUCTURES[structureType][room.controller.level] ?? 0;
+}
+
+function plannedOrBuiltCount(room: Room, structureType: BuildableStructureConstant): number {
+  const built = room.find(FIND_MY_STRUCTURES, {
+    filter: structure => structure.structureType === structureType
+  }).length;
+  const sites = room.find(FIND_MY_CONSTRUCTION_SITES, {
+    filter: site => site.structureType === structureType
+  }).length;
+
+  return built + sites;
+}
+
 function getAdjacentPositions(position: RoomPosition): RoomPosition[] {
+  return getPositionsInRange(position, 1);
+}
+
+function getPositionsInRange(position: RoomPosition, range: number): RoomPosition[] {
   const positions: RoomPosition[] = [];
 
-  for (let dx = -1; dx <= 1; dx += 1) {
-    for (let dy = -1; dy <= 1; dy += 1) {
+  for (let dx = -range; dx <= range; dx += 1) {
+    for (let dy = -range; dy <= range; dy += 1) {
       if (dx === 0 && dy === 0) {
         continue;
       }
@@ -145,7 +249,7 @@ function getAdjacentPositions(position: RoomPosition): RoomPosition[] {
   return positions;
 }
 
-function canBuildContainer(position: RoomPosition): boolean {
+function canBuildStructure(position: RoomPosition): boolean {
   if (isWall(position)) {
     return false;
   }

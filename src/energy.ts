@@ -10,7 +10,15 @@ export function updateWorkingState(creep: Creep): void {
   }
 }
 
-export function collectEnergy(creep: Creep): void {
+interface CollectEnergyOptions {
+  allowHarvest?: boolean;
+}
+
+export function collectWorkerEnergy(creep: Creep): void {
+  collectEnergy(creep, { allowHarvest: !roomHasMiner(creep.room) });
+}
+
+export function collectEnergy(creep: Creep, options: CollectEnergyOptions = {}): void {
   if (creep.store.getFreeCapacity() === 0) {
     return;
   }
@@ -31,9 +39,16 @@ export function collectEnergy(creep: Creep): void {
     return;
   }
 
-  if (creep.getActiveBodyparts(WORK) > 0) {
+  const allowHarvest = options.allowHarvest ?? true;
+  if (allowHarvest && creep.getActiveBodyparts(WORK) > 0) {
     harvestSource(creep);
   }
+}
+
+function roomHasMiner(room: Room): boolean {
+  return room.find(FIND_MY_CREEPS, {
+    filter: creep => creep.memory.role === "miner"
+  }).length > 0;
 }
 
 function pickupDroppedEnergy(creep: Creep): boolean {

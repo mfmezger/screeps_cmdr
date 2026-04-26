@@ -1,9 +1,13 @@
+import { runDefense } from "./defense";
 import { cleanupDeadCreeps } from "./memory";
 import { runRoomPlanning } from "./planning";
 import { runBuilder } from "./roles/builder";
+import { runClaimer } from "./roles/claimer";
+import { runDefender } from "./roles/defender";
 import { runHarvester } from "./roles/harvester";
 import { runHauler } from "./roles/hauler";
 import { runMiner } from "./roles/miner";
+import { runPioneer } from "./roles/pioneer";
 import { runRepairer } from "./roles/repairer";
 import { runUpgrader } from "./roles/upgrader";
 import { runSpawner } from "./spawning";
@@ -15,6 +19,7 @@ export function loop(): void {
 
   for (const roomName in Game.rooms) {
     const room = Game.rooms[roomName];
+    runDefense(room);
     runRoomPlanning(room);
     runTowers(room);
   }
@@ -44,6 +49,15 @@ export function loop(): void {
         break;
       case "repairer":
         runRepairer(creep);
+        break;
+      case "defender":
+        runDefender(creep);
+        break;
+      case "claimer":
+        runClaimer(creep);
+        break;
+      case "pioneer":
+        runPioneer(creep);
         break;
     }
   }

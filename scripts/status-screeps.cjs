@@ -75,6 +75,7 @@ function printRoom(room, history) {
   console.log(`  Towers: ${room.towers.count}, energy ${room.towers.energy}/${room.towers.capacity}`);
   console.log(`  Containers: ${room.containers.count}, energy ${room.containers.energy}/${room.containers.capacity}`);
   console.log(`  Sources: ${room.sources.map(source => `${shortId(source.id)} ${source.energy}/${source.energyCapacity} assigned=${source.assignedCreeps}`).join(", ") || "none"}`);
+  console.log(`  Expansion ready: ${room.expansionReady ? "yes" : "no"}`);
 
   const trend = roomTrend(room.name, history);
   if (trend) {
