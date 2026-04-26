@@ -1,47 +1,112 @@
 # screeps_cmdr
 
-Minimal TypeScript bot for the Screeps game.
+A TypeScript Screeps bot focused on simple, observable colony automation.
 
-## What it does now
+The current goal is not to be a huge framework. It is a small bot that can bootstrap a room, improve its economy, collect history, and give us enough telemetry to make better decisions over time.
+
+## Current capabilities
+
+### Economy
 
 - Cleans up memory for dead creeps.
-- Spawns a simple room workforce based on room state:
-  - 1 miner per source
-  - at least 1 hauler when sources exist
-  - 1 upgrader
-  - 1-2 builders when construction sites exist
-  - 1 repairer when repair targets fall below useful thresholds
-  - emergency harvester if the room has no harvester or miner
-  - replacement creeps before important creeps expire
-  - defender when hostiles are present and no tower exists
-- Towers attack hostile creeps, then repair if they have spare energy.
-- Defense activates safe mode when dangerous hostiles appear and there are no towers.
-- Room planning prioritizes speed: extensions first, then tower, source/base containers, storage/extractor, and only critical source roads before RCL3.
-- Creeps gather energy from dropped energy, tombstones, ruins, containers, then active sources.
-- Creeps that harvest directly remember an assigned source to reduce crowding.
-- Miners harvest assigned sources and put energy into adjacent containers or drop it for haulers.
-- Haulers fill spawns/extensions first, then towers, then a base container/storage; when idle they wait near pickup or delivery points.
-- Upgraders prefer storage/stored/dropped energy and upgrade the room controller.
-- Builders prefer storage/stored/dropped energy and build high-value construction first: extensions, towers, containers/storage, then roads.
-- Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures, with lower repair thresholds while important construction exists.
-- Draws lightweight room visuals for creep roles, source assignments, energy, and expansion target.
-- Writes current status and rolling history into `Memory.stats` for external inspection.
-- Automatic expansion support:
-  - scouts adjacent rooms
-  - records room scouting data in memory
-  - picks a safe two-source unowned room when available
-  - spawns a claimer and pioneers once the home room is ready
-  - manual flags named `Expand` or `Claim` still override the automatic target
-- Uses a simple spawn queue so emergency, economy, construction, defense, expansion, and scouting requests are prioritized consistently.
+- Uses a simple spawn queue for emergency, economy, construction, defense, expansion, and scouting needs.
+- Maintains a room workforce:
+  - miners for safe sources
+  - haulers for energy delivery
+  - upgraders for controller progress
+  - builders for construction
+  - repairers for meaningful damage
+  - defenders when hostiles appear and no tower exists
+  - scouts for expansion discovery
+- Adds replacement creeps before important creeps expire.
+- Can add a second miner to underworked container sources at low energy capacity.
+- Avoids Source Keeper sources and ignores Source Keepers for now.
 
-## Commands
+### Energy logistics
+
+- Creeps collect energy from dropped resources, tombstones, ruins, containers, storage, then safe active sources.
+- Miners harvest assigned safe sources and fill adjacent containers or drop energy.
+- Haulers fill spawns/extensions first, then towers, then a base container/storage.
+- Idle haulers wait near pickup or delivery points to reduce wasted travel.
+- Builders, upgraders, and repairers prefer stored energy before harvesting directly.
+
+### Construction and planning
+
+- Room planning prioritizes speed:
+  1. extensions
+  2. tower
+  3. source/base containers
+  4. storage/extractor
+  5. only critical source roads before RCL3
+- Builders prioritize construction by value:
+  1. spawn/extensions
+  2. towers
+  3. containers/storage
+  4. roads
+  5. everything else
+- Repair thresholds are lower while important construction exists so early energy is not wasted on minor road damage.
+
+### Defense
+
+- Towers attack hostile creeps first, then repair if they have spare energy.
+- Safe mode can activate when dangerous non-Source-Keeper hostiles appear and no tower is available.
+- Basic defenders are spawned for non-Source-Keeper hostiles when there is no tower.
+
+### Scouting and expansion
+
+- Scouts adjacent rooms automatically.
+- Scouting data is stored in `Memory.scouting`.
+- Automatic expansion can pick a safe, unowned, unreserved, two-source room.
+- Manual flags named `Expand` or `Claim` override automatic expansion target selection.
+- Expansion waits until the home room is ready.
+
+### Observability
+
+- Lightweight room visuals show:
+  - room energy/RCL/expansion target
+  - creep roles
+  - source assignment counts
+- The bot writes current status and rolling history into `Memory.stats`.
+- Local scripts can read status/history from Screeps through the API.
+
+## Project layout
+
+```txt
+src/
+  main.ts              # tick entrypoint
+  spawning.ts          # spawn queue and body selection
+  planning.ts          # construction planning
+  energy.ts            # shared energy collection helpers
+  sources.ts           # safe source assignment
+  scouting.ts          # room scouting and target scoring
+  stats.ts             # Memory.stats snapshots/history
+  roles/               # creep role behavior
+scripts/
+  upload-screeps.cjs   # deploy dist/main.js
+  status-screeps.cjs   # read Memory.stats
+```
+
+## Setup
+
+Install dependencies:
 
 ```bash
 npm install
+```
+
+Build the bundled Screeps module:
+
+```bash
 npm run build
 ```
 
-The build output is `dist/main.js`.
+The build output is:
+
+```txt
+dist/main.js
+```
+
+For the Screeps in-browser simulator/training rooms, copy the contents of `dist/main.js` as the `main` module.
 
 ## Uploading to Screeps
 
@@ -94,3 +159,40 @@ SCREEPS_SERVER=main SCREEPS_SHARD=shard3 SCREEPS_HISTORY_LIMIT=100 task history
 ```
 
 If `SCREEPS_SHARD` is not set, the status script tries common shards automatically.
+
+## Expansion behavior
+
+Expansion is conservative.
+
+The bot expands only when:
+
+- GCL allows another owned room
+- home room is RCL3+
+- home room has no hostile creeps
+- CPU bucket is healthy
+- miners and haulers are online
+- energy capacity is high enough to spawn a claimer
+- a valid target room exists from scouting or a manual flag
+
+Manual override:
+
+```txt
+Expand
+Claim
+```
+
+Place one of those flags in a target room to override automatic target selection.
+
+## Local simulation plan
+
+We want to add a local Screeps private-server harness for faster testing and optimization. See:
+
+```txt
+docs/local-simulation-plan.md
+```
+
+The intended loop is:
+
+```txt
+build → upload locally → run ticks → collect Memory.stats → analyze → improve
+```
