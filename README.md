@@ -20,7 +20,7 @@ Minimal TypeScript bot for the Screeps game.
 - Creeps gather energy from dropped energy, tombstones, ruins, containers, then active sources.
 - Creeps that harvest directly remember an assigned source to reduce crowding.
 - Miners harvest assigned sources and put energy into adjacent containers or drop it for haulers.
-- Haulers fill spawns/extensions first, then towers, then storage, then upgrade if there is nowhere to deliver energy.
+- Haulers fill spawns/extensions first, then towers, then storage; when idle they wait near pickup or delivery points.
 - Upgraders prefer storage/stored/dropped energy and upgrade the room controller.
 - Builders prefer storage/stored/dropped energy and build high-value construction first: extensions, towers, containers/storage, then roads.
 - Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures, with lower repair thresholds while important construction exists.
