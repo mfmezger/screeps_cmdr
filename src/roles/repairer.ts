@@ -1,4 +1,5 @@
 import { collectEnergy, updateWorkingState } from "../energy";
+import { findRepairTarget } from "../repair";
 
 export function runRepairer(creep: Creep): void {
   updateWorkingState(creep);
@@ -8,13 +9,7 @@ export function runRepairer(creep: Creep): void {
     return;
   }
 
-  const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-    filter: structure =>
-      structure.hits < structure.hitsMax &&
-      structure.structureType !== STRUCTURE_WALL &&
-      structure.structureType !== STRUCTURE_RAMPART
-  });
-
+  const target = findRepairTarget(creep);
   if (target) {
     if (creep.repair(target) === ERR_NOT_IN_RANGE) {
       creep.moveTo(target, { visualizePathStyle: { stroke: "#ffffff" } });

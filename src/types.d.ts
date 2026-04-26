@@ -1,7 +1,7 @@
 export {};
 
 declare global {
-  type CreepRole = "harvester" | "upgrader" | "builder" | "repairer";
+  type CreepRole = "harvester" | "miner" | "hauler" | "upgrader" | "builder" | "repairer";
 
   const console: {
     log(message?: unknown, ...optionalParams: unknown[]): void;
@@ -10,5 +10,6 @@ declare global {
   interface CreepMemory {
     role: CreepRole;
     working?: boolean;
+    sourceId?: Id<Source>;
   }
 }

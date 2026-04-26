@@ -1,3 +1,5 @@
+import { getAssignedSource } from "./sources";
+
 export function updateWorkingState(creep: Creep): void {
   if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
     creep.memory.working = false;
@@ -29,7 +31,9 @@ export function collectEnergy(creep: Creep): void {
     return;
   }
 
-  harvestSource(creep);
+  if (creep.getActiveBodyparts(WORK) > 0) {
+    harvestSource(creep);
+  }
 }
 
 function pickupDroppedEnergy(creep: Creep): boolean {
@@ -95,7 +99,11 @@ function withdrawFromContainer(creep: Creep): boolean {
 }
 
 function harvestSource(creep: Creep): boolean {
-  const target = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+  const assignedSource = getAssignedSource(creep);
+  const target = assignedSource && assignedSource.energy > 0
+    ? assignedSource
+    : creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+
   if (!target) {
     return false;
   }
