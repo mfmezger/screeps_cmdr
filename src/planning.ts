@@ -2,6 +2,7 @@ const PLAN_INTERVAL = 100;
 const MAX_NEW_SITES_PER_RUN = 3;
 const MAX_ROOM_SITES = 12;
 const ROAD_SITE_BACKLOG_LIMIT = 8;
+const EARLY_ROAD_SITE_BACKLOG_LIMIT = 5;
 
 export function runRoomPlanning(room: Room): void {
   if (Game.time % PLAN_INTERVAL !== 0) {
@@ -23,6 +24,7 @@ export function runRoomPlanning(room: Room): void {
   remainingSites -= planExtensions(room, remainingSites);
   remainingSites -= planTower(room, remainingSites);
   remainingSites -= planSourceContainers(room, remainingSites);
+  remainingSites -= planSpawnContainer(room, remainingSites);
   remainingSites -= planStorage(room, remainingSites);
   remainingSites -= planExtractor(room, remainingSites);
 
@@ -32,7 +34,14 @@ export function runRoomPlanning(room: Room): void {
 }
 
 function shouldPlanRoads(room: Room): boolean {
-  if (room.find(FIND_CONSTRUCTION_SITES).length >= ROAD_SITE_BACKLOG_LIMIT) {
+  const siteCount = room.find(FIND_CONSTRUCTION_SITES).length;
+  const controllerLevel = room.controller?.level ?? 0;
+
+  if (controllerLevel < 3 && siteCount >= EARLY_ROAD_SITE_BACKLOG_LIMIT) {
+    return false;
+  }
+
+  if (siteCount >= ROAD_SITE_BACKLOG_LIMIT) {
     return false;
   }
 
@@ -40,7 +49,7 @@ function shouldPlanRoads(room: Room): boolean {
     return false;
   }
 
-  if (room.controller && room.controller.level >= 3 && !allAllowedStructuresPlanned(room, STRUCTURE_TOWER)) {
+  if (controllerLevel >= 3 && !allAllowedStructuresPlanned(room, STRUCTURE_TOWER)) {
     return false;
   }
 
@@ -67,6 +76,31 @@ function planSourceContainers(room: Room, maxSites: number): number {
   }
 
   return created;
+}
+
+function planSpawnContainer(room: Room, maxSites: number): number {
+  if (maxSites <= 0 || !room.controller || room.controller.level < 2 || room.storage) {
+    return 0;
+  }
+
+  if (!allAllowedStructuresPlanned(room, STRUCTURE_EXTENSION)) {
+    return 0;
+  }
+
+  if (room.energyAvailable < room.energyCapacityAvailable) {
+    return 0;
+  }
+
+  const spawn = getPrimarySpawn(room);
+  if (!spawn || hasNearbySpawnContainerOrSite(spawn)) {
+    return 0;
+  }
+
+  const position = getPositionsInRange(spawn.pos, 2)
+    .filter(canBuildStructure)
+    .sort((left, right) => left.getRangeTo(spawn) - right.getRangeTo(spawn))[0];
+
+  return position && position.createConstructionSite(STRUCTURE_CONTAINER) === OK ? 1 : 0;
 }
 
 function planExtensions(room: Room, maxSites: number): number {
@@ -154,13 +188,7 @@ function planRoads(room: Room, maxSites: number): number {
   }
 
   let created = 0;
-  const targets: RoomPosition[] = [
-    ...room.find(FIND_SOURCES).map(source => source.pos)
-  ];
-
-  if (room.controller) {
-    targets.push(room.controller.pos);
-  }
+  const targets = roadTargets(room);
 
   for (const target of targets) {
     if (created >= maxSites) {
@@ -187,10 +215,37 @@ function planRoads(room: Room, maxSites: number): number {
   return created;
 }
 
+function roadTargets(room: Room): RoomPosition[] {
+  const controllerLevel = room.controller?.level ?? 0;
+  const targets = room.find(FIND_SOURCES).map(source => source.pos);
+
+  if (controllerLevel >= 3 && room.controller) {
+    targets.push(room.controller.pos);
+  }
+
+  return targets;
+}
+
 function getPrimarySpawn(room: Room): StructureSpawn | undefined {
   return room.find(FIND_MY_STRUCTURES, {
     filter: (structure): structure is StructureSpawn => structure.structureType === STRUCTURE_SPAWN
   })[0];
+}
+
+function hasNearbySpawnContainerOrSite(spawn: StructureSpawn): boolean {
+  const containers = spawn.pos.findInRange(FIND_STRUCTURES, 2, {
+    filter: (structure): structure is StructureContainer => structure.structureType === STRUCTURE_CONTAINER
+  });
+
+  if (containers.length > 0) {
+    return true;
+  }
+
+  const sites = spawn.pos.findInRange(FIND_CONSTRUCTION_SITES, 2, {
+    filter: site => site.structureType === STRUCTURE_CONTAINER
+  });
+
+  return sites.length > 0;
 }
 
 function hasNearbyContainerOrSite(source: Source): boolean {

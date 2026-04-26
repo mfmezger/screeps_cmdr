@@ -93,8 +93,8 @@ function findPrimaryDeliveryPoint(room: Room): StructureSpawn | StructureStorage
 
 function findDeliveryTarget(
   creep: Creep
-): StructureExtension | StructureSpawn | StructureTower | StructureStorage | undefined {
-  return findSpawnOrExtension(creep) ?? findTower(creep) ?? findStorage(creep);
+): StructureExtension | StructureSpawn | StructureTower | StructureContainer | StructureStorage | undefined {
+  return findSpawnOrExtension(creep) ?? findTower(creep) ?? findBaseContainer(creep) ?? findStorage(creep);
 }
 
 function findSpawnOrExtension(creep: Creep): StructureExtension | StructureSpawn | undefined {
@@ -111,6 +111,19 @@ function findTower(creep: Creep): StructureTower | undefined {
       structure.structureType === STRUCTURE_TOWER &&
       structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
   }) ?? undefined;
+}
+
+function findBaseContainer(creep: Creep): StructureContainer | undefined {
+  const spawn = creep.room.find(FIND_MY_SPAWNS)[0];
+  if (!spawn || creep.room.storage) {
+    return undefined;
+  }
+
+  return spawn.pos.findInRange(FIND_STRUCTURES, 2, {
+    filter: (structure): structure is StructureContainer =>
+      structure.structureType === STRUCTURE_CONTAINER &&
+      structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+  })[0];
 }
 
 function findStorage(creep: Creep): StructureStorage | undefined {

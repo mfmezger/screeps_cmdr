@@ -16,11 +16,11 @@ Minimal TypeScript bot for the Screeps game.
   - defender when hostiles are present and no tower exists
 - Towers attack hostile creeps, then repair if they have spare energy.
 - Defense activates safe mode when dangerous hostiles appear and there are no towers.
-- Room planning prioritizes speed: extensions first, then tower, containers, storage/extractor, and roads only when the backlog is low.
+- Room planning prioritizes speed: extensions first, then tower, source/base containers, storage/extractor, and only critical source roads before RCL3.
 - Creeps gather energy from dropped energy, tombstones, ruins, containers, then active sources.
 - Creeps that harvest directly remember an assigned source to reduce crowding.
 - Miners harvest assigned sources and put energy into adjacent containers or drop it for haulers.
-- Haulers fill spawns/extensions first, then towers, then storage; when idle they wait near pickup or delivery points.
+- Haulers fill spawns/extensions first, then towers, then a base container/storage; when idle they wait near pickup or delivery points.
 - Upgraders prefer storage/stored/dropped energy and upgrade the room controller.
 - Builders prefer storage/stored/dropped energy and build high-value construction first: extensions, towers, containers/storage, then roads.
 - Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures, with lower repair thresholds while important construction exists.
