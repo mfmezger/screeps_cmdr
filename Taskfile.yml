@@ -18,6 +18,16 @@ tasks:
     cmds:
       - node scripts/upload-screeps.cjs
 
+  status:
+    desc: Print current Screeps bot status from Memory.stats
+    cmds:
+      - node scripts/status-screeps.cjs
+
+  history:
+    desc: Print recent Screeps stats history as JSON
+    cmds:
+      - node scripts/status-screeps.cjs --json
+
   push:
     desc: Alias for upload
     cmds:

@@ -21,6 +21,7 @@ Minimal TypeScript bot for the Screeps game.
 - Upgraders gather energy and upgrade the room controller.
 - Builders gather energy and build construction sites, then upgrade if there is nothing to build.
 - Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures.
+- Writes current status and rolling history into `Memory.stats` for external inspection.
 
 ## Commands
 
@@ -60,3 +61,23 @@ SCREEPS_SERVER=main SCREEPS_BRANCH=default task upload
 ```
 
 `.screeps.yml` is ignored by git so your token is not committed.
+
+## Status and history
+
+After uploading the bot and waiting a few ticks, print a readable status report:
+
+```bash
+task status
+```
+
+Print recent stats history as JSON for later analysis:
+
+```bash
+task history
+```
+
+Useful environment variables:
+
+```bash
+SCREEPS_SERVER=main SCREEPS_SHARD=shard0 SCREEPS_HISTORY_LIMIT=100 task history
+```

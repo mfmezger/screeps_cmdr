@@ -7,6 +7,7 @@ import { runMiner } from "./roles/miner";
 import { runRepairer } from "./roles/repairer";
 import { runUpgrader } from "./roles/upgrader";
 import { runSpawner } from "./spawning";
+import { recordStats } from "./stats";
 import { runTowers } from "./towers";
 
 export function loop(): void {
@@ -46,4 +47,6 @@ export function loop(): void {
         break;
     }
   }
+
+  recordStats();
 }
