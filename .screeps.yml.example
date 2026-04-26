@@ -1,0 +1,16 @@
+# Copy this file to .screeps.yml and replace the token.
+# Create an auth token at: https://screeps.com/a/#!/account/auth-tokens
+servers:
+  main:
+    host: screeps.com
+    port: 443
+    secure: true
+    token: YOUR_SCREEPS_AUTH_TOKEN
+
+  # Optional: public test realm.
+  # ptr:
+  #   host: screeps.com
+  #   port: 443
+  #   secure: true
+  #   ptr: true
+  #   token: YOUR_SCREEPS_AUTH_TOKEN

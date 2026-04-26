@@ -1,4 +1,6 @@
 node_modules/
 dist/
+.screeps.yml
+.screeps.yaml
 *.log
 .DS_Store
