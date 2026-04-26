@@ -1,0 +1,15 @@
+{
+  "name": "screeps_cmdr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal TypeScript bot for the Screeps game.",
+  "scripts": {
+    "build": "tsc --noEmit && esbuild src/main.ts --bundle --platform=node --format=cjs --target=es2019 --outfile=dist/main.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/screeps": "^3.3.8",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0"
+  }
+}
