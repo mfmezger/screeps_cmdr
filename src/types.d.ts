@@ -60,6 +60,10 @@ declare global {
       energy: number;
       capacity: number;
     };
+    storage?: {
+      energy: number;
+      capacity: number;
+    };
     sources: SourceStatsSnapshot[];
     expansionReady: boolean;
   }

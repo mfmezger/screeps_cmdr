@@ -91,6 +91,12 @@ function buildRoomStats(room: Room): RoomStatsSnapshot {
       energy: sum(containers.map(container => container.store.getUsedCapacity(RESOURCE_ENERGY))),
       capacity: sum(containers.map(container => container.store.getCapacity(RESOURCE_ENERGY)))
     },
+    storage: room.storage
+      ? {
+          energy: room.storage.store.getUsedCapacity(RESOURCE_ENERGY),
+          capacity: room.storage.store.getCapacity(RESOURCE_ENERGY)
+        }
+      : undefined,
     sources: sources.map(source => ({
       id: source.id,
       energy: source.energy,

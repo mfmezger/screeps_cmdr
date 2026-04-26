@@ -22,8 +22,10 @@ export function runHauler(creep: Creep): void {
   }
 }
 
-function findDeliveryTarget(creep: Creep): StructureExtension | StructureSpawn | StructureTower | undefined {
-  return findSpawnOrExtension(creep) ?? findTower(creep);
+function findDeliveryTarget(
+  creep: Creep
+): StructureExtension | StructureSpawn | StructureTower | StructureStorage | undefined {
+  return findSpawnOrExtension(creep) ?? findTower(creep) ?? findStorage(creep);
 }
 
 function findSpawnOrExtension(creep: Creep): StructureExtension | StructureSpawn | undefined {
@@ -40,4 +42,13 @@ function findTower(creep: Creep): StructureTower | undefined {
       structure.structureType === STRUCTURE_TOWER &&
       structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
   }) ?? undefined;
+}
+
+function findStorage(creep: Creep): StructureStorage | undefined {
+  const storage = creep.room.storage;
+  if (!storage || storage.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+    return undefined;
+  }
+
+  return storage;
 }

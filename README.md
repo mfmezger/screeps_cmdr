@@ -20,10 +20,11 @@ Minimal TypeScript bot for the Screeps game.
 - Creeps gather energy from dropped energy, tombstones, ruins, containers, then active sources.
 - Creeps that harvest directly remember an assigned source to reduce crowding.
 - Miners harvest assigned sources and put energy into adjacent containers or drop it for haulers.
-- Haulers fill spawns/extensions first, then towers, then upgrade if there is nowhere to deliver energy.
-- Upgraders prefer stored/dropped energy and upgrade the room controller.
-- Builders prefer stored/dropped energy and build construction sites, then upgrade if there is nothing to build.
+- Haulers fill spawns/extensions first, then towers, then storage, then upgrade if there is nowhere to deliver energy.
+- Upgraders prefer storage/stored/dropped energy and upgrade the room controller.
+- Builders prefer storage/stored/dropped energy and build construction sites, then upgrade if there is nothing to build.
 - Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures.
+- Draws lightweight room visuals for creep roles, source assignments, energy, and expansion target.
 - Writes current status and rolling history into `Memory.stats` for external inspection.
 - Automatic expansion support:
   - scouts adjacent rooms
@@ -31,6 +32,7 @@ Minimal TypeScript bot for the Screeps game.
   - picks a safe two-source unowned room when available
   - spawns a claimer and pioneers once the home room is ready
   - manual flags named `Expand` or `Claim` still override the automatic target
+- Uses a simple spawn queue so emergency, economy, defense, expansion, and scouting requests are prioritized consistently.
 
 ## Commands
 

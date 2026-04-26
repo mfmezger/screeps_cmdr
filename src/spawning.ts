@@ -8,6 +8,7 @@ const ROLE_PRIORITY: CreepRole[] = ["defender", "miner", "hauler", "upgrader", "
 interface SpawnRequest {
   role: CreepRole;
   targetRoom?: string;
+  blockLowerPriority?: boolean;
 }
 
 export function runSpawner(spawn: StructureSpawn): void {
@@ -15,16 +16,21 @@ export function runSpawner(spawn: StructureSpawn): void {
     return;
   }
 
-  const request = chooseSpawnRequest(spawn.room);
-  if (!request) {
+  for (const request of buildSpawnQueue(spawn.room)) {
+    const body = chooseBody(request.role, spawn.room.energyAvailable);
+    if (!body) {
+      if (request.blockLowerPriority) {
+        return;
+      }
+      continue;
+    }
+
+    spawnCreep(spawn, request, body);
     return;
   }
+}
 
-  const body = chooseBody(request.role, spawn.room.energyAvailable);
-  if (!body) {
-    return;
-  }
-
+function spawnCreep(spawn: StructureSpawn, request: SpawnRequest, body: BodyPartConstant[]): void {
   const name = `${request.role}-${Game.time}`;
   const result = spawn.spawnCreep(body, name, {
     memory: {
@@ -39,13 +45,14 @@ export function runSpawner(spawn: StructureSpawn): void {
   }
 }
 
-function chooseSpawnRequest(room: Room): SpawnRequest | undefined {
+function buildSpawnQueue(room: Room): SpawnRequest[] {
+  const queue: SpawnRequest[] = [];
   const creeps = room.find(FIND_MY_CREEPS);
   const roleCounts = countViableRoles(creeps);
   const sources = room.find(FIND_SOURCES);
 
-  if (room.energyAvailable >= 200 && roleCounts.harvester === 0 && roleCounts.miner === 0) {
-    return { role: "harvester" };
+  if (roleCounts.harvester === 0 && roleCounts.miner === 0) {
+    return [{ role: "harvester", blockLowerPriority: true }];
   }
 
   const desiredCounts: Record<CreepRole, number> = {
@@ -63,31 +70,39 @@ function chooseSpawnRequest(room: Room): SpawnRequest | undefined {
 
   for (const role of ROLE_PRIORITY) {
     if (roleCounts[role] < desiredCounts[role]) {
-      return { role };
+      queue.push({ role, blockLowerPriority: true });
     }
   }
 
-  return chooseExpansionSpawnRequest(room) ?? chooseScoutingSpawnRequest(room);
-}
+  queue.push(...buildExpansionQueue(room));
 
-function chooseExpansionSpawnRequest(room: Room): SpawnRequest | undefined {
-  const targetRoom = getExpansionTargetRoom(room);
-  if (!targetRoom || !isExpansionReady(room)) {
-    return undefined;
+  const scoutingRequest = buildScoutingRequest(room);
+  if (scoutingRequest) {
+    queue.push(scoutingRequest);
   }
 
+  return queue;
+}
+
+function buildExpansionQueue(room: Room): SpawnRequest[] {
+  const targetRoom = getExpansionTargetRoom(room);
+  if (!targetRoom || !isExpansionReady(room)) {
+    return [];
+  }
+
+  const queue: SpawnRequest[] = [];
   if (countExpansionCreeps("claimer", targetRoom) < 1) {
-    return { role: "claimer", targetRoom };
+    queue.push({ role: "claimer", targetRoom, blockLowerPriority: true });
   }
 
   if (countExpansionCreeps("pioneer", targetRoom) < 2) {
-    return { role: "pioneer", targetRoom };
+    queue.push({ role: "pioneer", targetRoom });
   }
 
-  return undefined;
+  return queue;
 }
 
-function chooseScoutingSpawnRequest(room: Room): SpawnRequest | undefined {
+function buildScoutingRequest(room: Room): SpawnRequest | undefined {
   if (!shouldSpawnScout(room)) {
     return undefined;
   }

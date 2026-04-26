@@ -15,6 +15,7 @@ import { recordScouting } from "./scouting";
 import { runSpawner } from "./spawning";
 import { recordStats } from "./stats";
 import { runTowers } from "./towers";
+import { runRoomVisuals } from "./visuals";
 
 export function loop(): void {
   cleanupDeadCreeps();
@@ -25,6 +26,7 @@ export function loop(): void {
     runDefense(room);
     runRoomPlanning(room);
     runTowers(room);
+    runRoomVisuals(room);
   }
 
   for (const spawnName in Game.spawns) {

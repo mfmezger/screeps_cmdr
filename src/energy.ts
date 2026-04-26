@@ -12,10 +12,14 @@ export function updateWorkingState(creep: Creep): void {
 
 interface CollectEnergyOptions {
   allowHarvest?: boolean;
+  allowStorage?: boolean;
 }
 
 export function collectWorkerEnergy(creep: Creep): void {
-  collectEnergy(creep, { allowHarvest: !roomHasMiner(creep.room) });
+  collectEnergy(creep, {
+    allowHarvest: !roomHasMiner(creep.room),
+    allowStorage: true
+  });
 }
 
 export function collectEnergy(creep: Creep, options: CollectEnergyOptions = {}): void {
@@ -32,6 +36,10 @@ export function collectEnergy(creep: Creep, options: CollectEnergyOptions = {}):
   }
 
   if (withdrawFromRuin(creep)) {
+    return;
+  }
+
+  if (options.allowStorage && withdrawFromStorage(creep)) {
     return;
   }
 
@@ -92,6 +100,18 @@ function withdrawFromRuin(creep: Creep): boolean {
 
   if (creep.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
     creep.moveTo(target, { visualizePathStyle: { stroke: "#ffaa00" } });
+  }
+  return true;
+}
+
+function withdrawFromStorage(creep: Creep): boolean {
+  const storage = creep.room.storage;
+  if (!storage || storage.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+    return false;
+  }
+
+  if (creep.withdraw(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(storage, { visualizePathStyle: { stroke: "#ffaa00" } });
   }
   return true;
 }

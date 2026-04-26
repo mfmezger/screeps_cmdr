@@ -77,6 +77,9 @@ function printRoom(room, history) {
   console.log(`  Sites: ${room.constructionSites}, repair targets: ${room.repairTargets}, hostiles: ${room.hostiles}`);
   console.log(`  Towers: ${room.towers.count}, energy ${room.towers.energy}/${room.towers.capacity}`);
   console.log(`  Containers: ${room.containers.count}, energy ${room.containers.energy}/${room.containers.capacity}`);
+  if (room.storage) {
+    console.log(`  Storage: energy ${room.storage.energy}/${room.storage.capacity}`);
+  }
   console.log(`  Sources: ${room.sources.map(source => `${shortId(source.id)} ${source.energy}/${source.energyCapacity} assigned=${source.assignedCreeps}`).join(", ") || "none"}`);
   console.log(`  Expansion ready: ${room.expansionReady ? "yes" : "no"}`);
 
