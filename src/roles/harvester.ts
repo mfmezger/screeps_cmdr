@@ -1,6 +1,8 @@
+import { collectEnergy } from "../energy";
+
 export function runHarvester(creep: Creep): void {
   if (creep.store.getFreeCapacity() > 0) {
-    harvestEnergy(creep);
+    collectEnergy(creep);
     return;
   }
 
@@ -23,16 +25,5 @@ export function runHarvester(creep: Creep): void {
     if (creep.upgradeController(creep.room.controller) === ERR_NOT_IN_RANGE) {
       creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: "#ffffff" } });
     }
-  }
-}
-
-function harvestEnergy(creep: Creep): void {
-  const source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
-  if (!source) {
-    return;
-  }
-
-  if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-    creep.moveTo(source, { visualizePathStyle: { stroke: "#ffaa00" } });
   }
 }

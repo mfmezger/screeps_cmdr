@@ -1,4 +1,4 @@
-const ROLE_PRIORITY: CreepRole[] = ["harvester", "upgrader", "builder"];
+const ROLE_PRIORITY: CreepRole[] = ["harvester", "upgrader", "builder", "repairer"];
 
 export function runSpawner(spawn: StructureSpawn): void {
   if (spawn.spawning) {
@@ -32,7 +32,8 @@ function chooseRoleToSpawn(room: Room): CreepRole | undefined {
   const desiredCounts: Record<CreepRole, number> = {
     harvester: 2,
     upgrader: 1,
-    builder: room.find(FIND_CONSTRUCTION_SITES).length > 0 ? 1 : 0
+    builder: room.find(FIND_CONSTRUCTION_SITES).length > 0 ? 1 : 0,
+    repairer: roomHasRepairTargets(room) ? 1 : 0
   };
 
   const creeps = room.find(FIND_MY_CREEPS);
@@ -45,6 +46,15 @@ function chooseRoleToSpawn(room: Room): CreepRole | undefined {
   }
 
   return undefined;
+}
+
+function roomHasRepairTargets(room: Room): boolean {
+  return room.find(FIND_STRUCTURES, {
+    filter: structure =>
+      structure.hits < structure.hitsMax &&
+      structure.structureType !== STRUCTURE_WALL &&
+      structure.structureType !== STRUCTURE_RAMPART
+  }).length > 0;
 }
 
 function chooseBody(energyAvailable: number): BodyPartConstant[] | undefined {

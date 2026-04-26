@@ -9,9 +9,12 @@ Minimal TypeScript bot for the Screeps game.
   - 2 harvesters
   - 1 upgrader
   - 1 builder when construction sites exist
+  - 1 repairer when roads, containers, or other non-wall structures are damaged
+- Creeps gather energy from dropped energy, tombstones, ruins, containers, then active sources.
 - Harvesters fill spawns, extensions, and towers, then upgrade if there is nowhere to deliver energy.
-- Upgraders harvest and upgrade the room controller.
-- Builders harvest and build construction sites, then upgrade if there is nothing to build.
+- Upgraders gather energy and upgrade the room controller.
+- Builders gather energy and build construction sites, then upgrade if there is nothing to build.
+- Repairers gather energy and repair damaged non-wall/rampart structures, then upgrade if nothing needs repair.
 
 ## Commands
 
