@@ -8,14 +8,7 @@ export function runHauler(creep: Creep): void {
     return;
   }
 
-  const target = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-    filter: structure =>
-      (structure.structureType === STRUCTURE_SPAWN ||
-        structure.structureType === STRUCTURE_EXTENSION ||
-        structure.structureType === STRUCTURE_TOWER) &&
-      structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-  });
-
+  const target = findDeliveryTarget(creep);
   if (target) {
     if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
       creep.moveTo(target, { visualizePathStyle: { stroke: "#ffaa00" } });
@@ -27,4 +20,24 @@ export function runHauler(creep: Creep): void {
   if (controller && creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
     creep.moveTo(controller, { visualizePathStyle: { stroke: "#ffffff" } });
   }
+}
+
+function findDeliveryTarget(creep: Creep): StructureExtension | StructureSpawn | StructureTower | undefined {
+  return findSpawnOrExtension(creep) ?? findTower(creep);
+}
+
+function findSpawnOrExtension(creep: Creep): StructureExtension | StructureSpawn | undefined {
+  return creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+    filter: (structure): structure is StructureExtension | StructureSpawn =>
+      (structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_EXTENSION) &&
+      structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+  }) ?? undefined;
+}
+
+function findTower(creep: Creep): StructureTower | undefined {
+  return creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+    filter: (structure): structure is StructureTower =>
+      structure.structureType === STRUCTURE_TOWER &&
+      structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+  }) ?? undefined;
 }

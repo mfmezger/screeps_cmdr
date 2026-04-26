@@ -1,4 +1,5 @@
 import { cleanupDeadCreeps } from "./memory";
+import { runRoomPlanning } from "./planning";
 import { runBuilder } from "./roles/builder";
 import { runHarvester } from "./roles/harvester";
 import { runHauler } from "./roles/hauler";
@@ -12,7 +13,9 @@ export function loop(): void {
   cleanupDeadCreeps();
 
   for (const roomName in Game.rooms) {
-    runTowers(Game.rooms[roomName]);
+    const room = Game.rooms[roomName];
+    runRoomPlanning(room);
+    runTowers(room);
   }
 
   for (const spawnName in Game.spawns) {

@@ -13,10 +13,11 @@ Minimal TypeScript bot for the Screeps game.
   - 1 repairer when repair targets fall below useful thresholds
   - emergency harvester if the room has no harvester or miner
 - Towers attack hostile creeps, then repair if they have spare energy.
+- Room planning periodically places source containers and roads from spawn to sources/controller.
 - Creeps gather energy from dropped energy, tombstones, ruins, containers, then active sources.
 - Creeps that harvest directly remember an assigned source to reduce crowding.
 - Miners harvest assigned sources and put energy into adjacent containers or drop it for haulers.
-- Haulers move energy into spawns, extensions, and towers, then upgrade if there is nowhere to deliver energy.
+- Haulers fill spawns/extensions first, then towers, then upgrade if there is nowhere to deliver energy.
 - Upgraders gather energy and upgrade the room controller.
 - Builders gather energy and build construction sites, then upgrade if there is nothing to build.
 - Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures.
