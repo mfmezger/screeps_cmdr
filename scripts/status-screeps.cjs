@@ -54,6 +54,9 @@ function printReport(stats) {
   console.log(`CPU: ${current.cpu.used}/${current.cpu.limit}, bucket ${current.cpu.bucket}`);
   console.log(`GCL: ${current.gcl.level} (${percent(current.gcl.progress, current.gcl.progressTotal)})`);
   console.log(`Creeps: ${formatCreeps(current.creeps)}`);
+  if (current.expansion) {
+    console.log(`Expansion target: ${current.expansion.targetRoom || "none"}, scouted rooms: ${current.expansion.scoutedRooms}`);
+  }
   console.log(`History: ${history.length} samples${history.length > 0 ? `, ticks ${history[0].tick}-${history[history.length - 1].tick}` : ""}`);
 
   for (const room of current.rooms) {

@@ -1,6 +1,7 @@
 import { roomNeedsDefender } from "./defense";
 import { countExpansionCreeps, getExpansionTargetRoom, isExpansionReady } from "./expansion";
 import { roomHasRepairTargets } from "./repair";
+import { getNextScoutTarget, shouldSpawnScout } from "./scouting";
 
 const ROLE_PRIORITY: CreepRole[] = ["defender", "miner", "hauler", "upgrader", "builder", "repairer"];
 
@@ -56,7 +57,8 @@ function chooseSpawnRequest(room: Room): SpawnRequest | undefined {
     repairer: roomHasRepairTargets(room) ? 1 : 0,
     defender: roomNeedsDefender(room) ? 1 : 0,
     claimer: 0,
-    pioneer: 0
+    pioneer: 0,
+    scout: 0
   };
 
   for (const role of ROLE_PRIORITY) {
@@ -65,11 +67,11 @@ function chooseSpawnRequest(room: Room): SpawnRequest | undefined {
     }
   }
 
-  return chooseExpansionSpawnRequest(room);
+  return chooseExpansionSpawnRequest(room) ?? chooseScoutingSpawnRequest(room);
 }
 
 function chooseExpansionSpawnRequest(room: Room): SpawnRequest | undefined {
-  const targetRoom = getExpansionTargetRoom();
+  const targetRoom = getExpansionTargetRoom(room);
   if (!targetRoom || !isExpansionReady(room)) {
     return undefined;
   }
@@ -85,6 +87,19 @@ function chooseExpansionSpawnRequest(room: Room): SpawnRequest | undefined {
   return undefined;
 }
 
+function chooseScoutingSpawnRequest(room: Room): SpawnRequest | undefined {
+  if (!shouldSpawnScout(room)) {
+    return undefined;
+  }
+
+  const targetRoom = getNextScoutTarget(room);
+  if (!targetRoom) {
+    return undefined;
+  }
+
+  return { role: "scout", targetRoom };
+}
+
 function countViableRoles(creeps: Creep[]): Record<CreepRole, number> {
   return {
     harvester: countViableRole(creeps, "harvester"),
@@ -95,7 +110,8 @@ function countViableRoles(creeps: Creep[]): Record<CreepRole, number> {
     repairer: countViableRole(creeps, "repairer"),
     defender: countViableRole(creeps, "defender"),
     claimer: countViableRole(creeps, "claimer"),
-    pioneer: countViableRole(creeps, "pioneer")
+    pioneer: countViableRole(creeps, "pioneer"),
+    scout: countViableRole(creeps, "scout")
   };
 }
 
@@ -145,6 +161,8 @@ function chooseBody(role: CreepRole, energyAvailable: number): BodyPartConstant[
       return energyAvailable >= 650 ? [CLAIM, MOVE] : undefined;
     case "pioneer":
       return chooseWorkerBody(energyAvailable);
+    case "scout":
+      return energyAvailable >= 50 ? [MOVE] : undefined;
     default:
       return chooseWorkerBody(energyAvailable);
   }

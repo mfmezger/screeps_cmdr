@@ -25,7 +25,12 @@ Minimal TypeScript bot for the Screeps game.
 - Builders prefer stored/dropped energy and build construction sites, then upgrade if there is nothing to build.
 - Repairers prioritize containers, then roads, then other damaged non-wall/rampart structures.
 - Writes current status and rolling history into `Memory.stats` for external inspection.
-- Optional expansion support: place a flag named `Expand` or `Claim` in a target room to spawn a claimer and pioneers once the home room is ready.
+- Automatic expansion support:
+  - scouts adjacent rooms
+  - records room scouting data in memory
+  - picks a safe two-source unowned room when available
+  - spawns a claimer and pioneers once the home room is ready
+  - manual flags named `Expand` or `Claim` still override the automatic target
 
 ## Commands
 

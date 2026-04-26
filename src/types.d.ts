@@ -10,7 +10,8 @@ declare global {
     | "repairer"
     | "defender"
     | "claimer"
-    | "pioneer";
+    | "pioneer"
+    | "scout";
 
   const console: {
     log(message?: unknown, ...optionalParams: unknown[]): void;
@@ -26,6 +27,7 @@ declare global {
     defender: number;
     claimer: number;
     pioneer: number;
+    scout: number;
   }
 
   interface SourceStatsSnapshot {
@@ -76,11 +78,30 @@ declare global {
     };
     creeps: CreepCountsByRole;
     rooms: RoomStatsSnapshot[];
+    expansion: {
+      targetRoom?: string;
+      scoutedRooms: number;
+    };
   }
 
   interface BotStatsMemory {
     current: BotStatsSnapshot;
     history: BotStatsSnapshot[];
+  }
+
+  interface ScoutedRoomMemory {
+    name: string;
+    lastSeen: number;
+    sources: number;
+    hostiles: number;
+    hasController: boolean;
+    owner?: string;
+    reservation?: string;
+    my: boolean;
+  }
+
+  interface ScoutingMemory {
+    rooms: Record<string, ScoutedRoomMemory>;
   }
 
   interface CreepMemory {
@@ -92,5 +113,6 @@ declare global {
 
   interface Memory {
     stats?: BotStatsMemory;
+    scouting?: ScoutingMemory;
   }
 }

@@ -1,6 +1,8 @@
+import { getAutomaticExpansionTarget } from "./scouting";
+
 const EXPANSION_FLAG_NAMES = ["Expand", "Claim"];
 
-export function getExpansionTargetRoom(): string | undefined {
+export function getExpansionTargetRoom(homeRoom?: Room): string | undefined {
   for (const flagName of EXPANSION_FLAG_NAMES) {
     const flag = Game.flags[flagName];
     if (flag) {
@@ -8,7 +10,11 @@ export function getExpansionTargetRoom(): string | undefined {
     }
   }
 
-  return undefined;
+  if (!homeRoom) {
+    return undefined;
+  }
+
+  return getAutomaticExpansionTarget(homeRoom);
 }
 
 export function isExpansionReady(room: Room): boolean {
@@ -25,6 +31,10 @@ export function isExpansionReady(room: Room): boolean {
     return false;
   }
 
+  if (ownedRoomCount() >= Game.gcl.level) {
+    return false;
+  }
+
   const creeps = room.find(FIND_MY_CREEPS);
   const miners = creeps.filter(creep => creep.memory.role === "miner").length;
   const haulers = creeps.filter(creep => creep.memory.role === "hauler").length;
@@ -38,4 +48,8 @@ export function countExpansionCreeps(role: CreepRole, targetRoom: string): numbe
   return Object.values(Game.creeps).filter(creep =>
     creep.memory.role === role && creep.memory.targetRoom === targetRoom
   ).length;
+}
+
+function ownedRoomCount(): number {
+  return Object.values(Game.rooms).filter(room => room.controller?.my).length;
 }

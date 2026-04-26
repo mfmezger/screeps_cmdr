@@ -1,4 +1,4 @@
-import { isExpansionReady } from "./expansion";
+import { getExpansionTargetRoom, isExpansionReady } from "./expansion";
 
 const HISTORY_INTERVAL = 20;
 const MAX_HISTORY = 250;
@@ -26,6 +26,8 @@ export function recordStats(): void {
 }
 
 function buildStatsSnapshot(): BotStatsSnapshot {
+  const homeRoom = Object.values(Game.rooms).find(room => room.controller?.my);
+
   return {
     tick: Game.time,
     cpu: {
@@ -39,7 +41,11 @@ function buildStatsSnapshot(): BotStatsSnapshot {
       progressTotal: Game.gcl.progressTotal
     },
     creeps: countCreepsByRole(Object.values(Game.creeps)),
-    rooms: Object.values(Game.rooms).map(buildRoomStats)
+    rooms: Object.values(Game.rooms).map(buildRoomStats),
+    expansion: {
+      targetRoom: homeRoom ? getExpansionTargetRoom(homeRoom) : undefined,
+      scoutedRooms: Object.keys(Memory.scouting?.rooms ?? {}).length
+    }
   };
 }
 
@@ -105,7 +111,8 @@ function countCreepsByRole(creeps: Creep[]): Record<CreepRole, number> {
     repairer: creeps.filter(creep => creep.memory.role === "repairer").length,
     defender: creeps.filter(creep => creep.memory.role === "defender").length,
     claimer: creeps.filter(creep => creep.memory.role === "claimer").length,
-    pioneer: creeps.filter(creep => creep.memory.role === "pioneer").length
+    pioneer: creeps.filter(creep => creep.memory.role === "pioneer").length,
+    scout: creeps.filter(creep => creep.memory.role === "scout").length
   };
 }
 

@@ -9,7 +9,9 @@ import { runHauler } from "./roles/hauler";
 import { runMiner } from "./roles/miner";
 import { runPioneer } from "./roles/pioneer";
 import { runRepairer } from "./roles/repairer";
+import { runScout } from "./roles/scout";
 import { runUpgrader } from "./roles/upgrader";
+import { recordScouting } from "./scouting";
 import { runSpawner } from "./spawning";
 import { recordStats } from "./stats";
 import { runTowers } from "./towers";
@@ -19,6 +21,7 @@ export function loop(): void {
 
   for (const roomName in Game.rooms) {
     const room = Game.rooms[roomName];
+    recordScouting(room);
     runDefense(room);
     runRoomPlanning(room);
     runTowers(room);
@@ -58,6 +61,9 @@ export function loop(): void {
         break;
       case "pioneer":
         runPioneer(creep);
+        break;
+      case "scout":
+        runScout(creep);
         break;
     }
   }
