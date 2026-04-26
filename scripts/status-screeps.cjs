@@ -1,26 +1,41 @@
 const { ScreepsAPI } = require("screeps-api");
 
 const server = process.env.SCREEPS_SERVER || "main";
-const shard = process.env.SCREEPS_SHARD || "shard0";
+const configuredShard = process.env.SCREEPS_SHARD;
 const outputJson = process.argv.includes("--json") || process.env.SCREEPS_STATUS_JSON === "1";
 const historyLimit = Number(process.env.SCREEPS_HISTORY_LIMIT || 25);
+const commonShards = ["shard0", "shard1", "shard2", "shard3"];
 
 async function main() {
   const api = await ScreepsAPI.fromConfig(server);
-  const response = await api.memory.get("stats", shard);
-  const stats = parseMemoryResponse(response);
+  const result = await loadStats(api);
 
-  if (!stats || !stats.current) {
-    console.log("No Memory.stats found yet. Upload the bot and wait a few ticks.");
+  if (!result) {
+    const shardHint = configuredShard ? ` on ${configuredShard}` : " on any common shard";
+    console.log(`No Memory.stats found${shardHint}. Upload the bot and wait a few ticks.`);
     return;
   }
 
   if (outputJson) {
-    console.log(JSON.stringify(trimHistory(stats, historyLimit), null, 2));
+    console.log(JSON.stringify(trimHistory({ ...result.stats, shard: result.shard }, historyLimit), null, 2));
     return;
   }
 
-  printReport(stats);
+  printReport(result.stats, result.shard);
+}
+
+async function loadStats(api) {
+  const shards = configuredShard ? [configuredShard] : commonShards;
+
+  for (const shard of shards) {
+    const response = await api.memory.get("stats", shard);
+    const stats = parseMemoryResponse(response);
+    if (stats && stats.current) {
+      return { shard, stats };
+    }
+  }
+
+  return undefined;
 }
 
 function parseMemoryResponse(response) {
@@ -46,11 +61,11 @@ function trimHistory(stats, limit) {
   };
 }
 
-function printReport(stats) {
+function printReport(stats, shard) {
   const current = stats.current;
   const history = Array.isArray(stats.history) ? stats.history : [];
 
-  console.log(`Screeps status @ tick ${current.tick}`);
+  console.log(`Screeps status @ tick ${current.tick} (${shard})`);
   console.log(`CPU: ${current.cpu.used}/${current.cpu.limit}, bucket ${current.cpu.bucket}`);
   console.log(`GCL: ${current.gcl.level} (${percent(current.gcl.progress, current.gcl.progressTotal)})`);
   console.log(`Creeps: ${formatCreeps(current.creeps)}`);
@@ -120,7 +135,7 @@ function roomInsights(room) {
     insights.push(`${room.hostiles} hostile creep(s) present`);
   }
 
-  if (room.creeps.miner === 0 && room.creeps.harvester === 0) {
+  if (room.energyCapacityAvailable > 0 && room.creeps.miner === 0 && room.creeps.harvester === 0) {
     insights.push("no miner/harvester active");
   }
 
@@ -128,7 +143,7 @@ function roomInsights(room) {
     insights.push("stored container energy but no hauler");
   }
 
-  if (room.energyAvailable < room.energyCapacityAvailable * 0.5) {
+  if (room.energyCapacityAvailable > 0 && room.energyAvailable < room.energyCapacityAvailable * 0.5) {
     insights.push("spawn energy below 50%");
   }
 
@@ -151,7 +166,7 @@ function formatCreeps(creeps) {
 }
 
 function controllerProgress(room) {
-  if (!room.controller) {
+  if (!room.controller || typeof room.controller.progress !== "number") {
     return 0;
   }
 

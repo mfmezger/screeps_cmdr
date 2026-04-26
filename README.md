@@ -90,5 +90,7 @@ task history
 Useful environment variables:
 
 ```bash
-SCREEPS_SERVER=main SCREEPS_SHARD=shard0 SCREEPS_HISTORY_LIMIT=100 task history
+SCREEPS_SERVER=main SCREEPS_SHARD=shard3 SCREEPS_HISTORY_LIMIT=100 task history
 ```
+
+If `SCREEPS_SHARD` is not set, the status script tries common shards automatically.
