@@ -1,3 +1,4 @@
+import { isSourceKeeper } from "./hostiles";
 import { findTowerRepairTarget } from "./repair";
 
 export function runTowers(room: Room): void {
@@ -11,7 +12,9 @@ export function runTowers(room: Room): void {
 }
 
 function runTower(tower: StructureTower): void {
-  const hostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+  const hostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
+    filter: creep => !isSourceKeeper(creep)
+  });
   if (hostile) {
     tower.attack(hostile);
     return;

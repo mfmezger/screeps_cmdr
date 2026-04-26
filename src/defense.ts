@@ -1,5 +1,7 @@
+import { findNonKeeperHostiles } from "./hostiles";
+
 export function runDefense(room: Room): void {
-  const hostiles = room.find(FIND_HOSTILE_CREEPS);
+  const hostiles = findNonKeeperHostiles(room);
   if (hostiles.length === 0) {
     return;
   }
@@ -32,7 +34,7 @@ export function runDefense(room: Room): void {
 }
 
 export function roomNeedsDefender(room: Room): boolean {
-  const hostiles = room.find(FIND_HOSTILE_CREEPS);
+  const hostiles = findNonKeeperHostiles(room);
   if (hostiles.length === 0) {
     return false;
   }

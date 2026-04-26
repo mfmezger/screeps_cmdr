@@ -1,5 +1,9 @@
+import { isSourceKeeper } from "../hostiles";
+
 export function runDefender(creep: Creep): void {
-  const target = creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS);
+  const target = creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS, {
+    filter: hostile => !isSourceKeeper(hostile)
+  });
   if (target) {
     if (creep.attack(target) === ERR_NOT_IN_RANGE) {
       creep.moveTo(target, { visualizePathStyle: { stroke: "#ff0000" } });

@@ -1,3 +1,5 @@
+import { isSourceKeeper } from "./hostiles";
+
 const SOURCE_KEEPER_AVOID_RANGE = 6;
 const HOSTILE_AVOID_RANGE = 5;
 const ASSIGNMENT_PENALTY = 25;
@@ -58,7 +60,9 @@ function isSafeSource(source: Source): boolean {
     return false;
   }
 
-  return source.pos.findInRange(FIND_HOSTILE_CREEPS, HOSTILE_AVOID_RANGE).length === 0;
+  return source.pos.findInRange(FIND_HOSTILE_CREEPS, HOSTILE_AVOID_RANGE, {
+    filter: hostile => isSourceKeeper(hostile) || hostile.getActiveBodyparts(ATTACK) > 0 || hostile.getActiveBodyparts(RANGED_ATTACK) > 0
+  }).length === 0;
 }
 
 function assignedCount(source: Source): number {
