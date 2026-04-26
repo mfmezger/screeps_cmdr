@@ -7,6 +7,9 @@ export function recordScouting(room: Room): void {
     lastSeen: Game.time,
     sources: room.find(FIND_SOURCES).length,
     hostiles: room.find(FIND_HOSTILE_CREEPS).length,
+    keeperLairs: room.find(FIND_STRUCTURES, {
+      filter: structure => structure.structureType === STRUCTURE_KEEPER_LAIR
+    }).length,
     hasController: !!room.controller,
     owner: room.controller?.owner?.username,
     reservation: room.controller?.reservation?.username,
@@ -86,6 +89,7 @@ function isClaimable(room: ScoutedRoomMemory): boolean {
     !room.owner &&
     !room.reservation &&
     room.hostiles === 0 &&
+    (room.keeperLairs ?? 0) === 0 &&
     room.sources >= 2;
 }
 

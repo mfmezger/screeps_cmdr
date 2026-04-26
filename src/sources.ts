@@ -1,14 +1,18 @@
+const SOURCE_KEEPER_AVOID_RANGE = 6;
+const HOSTILE_AVOID_RANGE = 5;
+const ASSIGNMENT_PENALTY = 25;
+
 export function getAssignedSource(creep: Creep): Source | undefined {
   if (creep.memory.sourceId) {
     const source = Game.getObjectById(creep.memory.sourceId);
-    if (source) {
+    if (source && isSafeSource(source)) {
       return source;
     }
 
     delete creep.memory.sourceId;
   }
 
-  const source = chooseLeastAssignedSource(creep.room);
+  const source = chooseSource(creep);
   if (!source) {
     return undefined;
   }
@@ -17,15 +21,44 @@ export function getAssignedSource(creep: Creep): Source | undefined {
   return source;
 }
 
-function chooseLeastAssignedSource(room: Room): Source | undefined {
-  const sources = room.find(FIND_SOURCES);
+export function findClosestSafeActiveSource(creep: Creep): Source | undefined {
+  return creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE, {
+    filter: source => isSafeSource(source)
+  }) ?? undefined;
+}
+
+function chooseSource(creep: Creep): Source | undefined {
+  const sources = creep.room.find(FIND_SOURCES).filter(isSafeSource);
   if (sources.length === 0) {
     return undefined;
   }
 
-  return sources.reduce((best, source) => {
-    return assignedCount(source) < assignedCount(best) ? source : best;
+  return sources.sort((left, right) => sourceScore(creep, left) - sourceScore(creep, right))[0];
+}
+
+function sourceScore(creep: Creep, source: Source): number {
+  return pathDistance(creep, source) + assignedCount(source) * ASSIGNMENT_PENALTY;
+}
+
+function pathDistance(creep: Creep, source: Source): number {
+  const path = creep.pos.findPathTo(source, {
+    ignoreCreeps: true,
+    range: 1
   });
+
+  return path.length > 0 ? path.length : creep.pos.getRangeTo(source);
+}
+
+function isSafeSource(source: Source): boolean {
+  const keeperLair = source.pos.findInRange(FIND_STRUCTURES, SOURCE_KEEPER_AVOID_RANGE, {
+    filter: structure => structure.structureType === STRUCTURE_KEEPER_LAIR
+  })[0];
+
+  if (keeperLair) {
+    return false;
+  }
+
+  return source.pos.findInRange(FIND_HOSTILE_CREEPS, HOSTILE_AVOID_RANGE).length === 0;
 }
 
 function assignedCount(source: Source): number {

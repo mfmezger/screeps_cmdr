@@ -98,6 +98,7 @@ declare global {
     lastSeen: number;
     sources: number;
     hostiles: number;
+    keeperLairs?: number;
     hasController: boolean;
     owner?: string;
     reservation?: string;

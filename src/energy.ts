@@ -1,4 +1,4 @@
-import { getAssignedSource } from "./sources";
+import { findClosestSafeActiveSource, getAssignedSource } from "./sources";
 
 export function updateWorkingState(creep: Creep): void {
   if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
@@ -137,7 +137,7 @@ function harvestSource(creep: Creep): boolean {
   const assignedSource = getAssignedSource(creep);
   const target = assignedSource && assignedSource.energy > 0
     ? assignedSource
-    : creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+    : findClosestSafeActiveSource(creep);
 
   if (!target) {
     return false;
