@@ -57,7 +57,7 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
 
   const desiredCounts: Record<CreepRole, number> = {
     harvester: 0,
-    miner: sources.length,
+    miner: desiredMinerCount(room),
     hauler: sources.length > 0 ? Math.max(1, sources.length) : 0,
     upgrader: 1,
     builder: desiredBuilderCount(room),
@@ -153,6 +153,59 @@ function replacementLeadTime(role: CreepRole): number {
     default:
       return 50;
   }
+}
+
+function desiredMinerCount(room: Room): number {
+  return room.find(FIND_SOURCES).reduce((total, source) => {
+    return total + desiredMinersForSource(room, source);
+  }, 0);
+}
+
+function desiredMinersForSource(room: Room, source: Source): number {
+  if (room.energyCapacityAvailable >= 550) {
+    return 1;
+  }
+
+  if (source.energy < source.energyCapacity * 0.5) {
+    return 1;
+  }
+
+  if (!hasAdjacentContainer(source) || walkableAdjacentPositions(source.pos) < 2) {
+    return 1;
+  }
+
+  return 2;
+}
+
+function hasAdjacentContainer(source: Source): boolean {
+  return source.pos.findInRange(FIND_STRUCTURES, 1, {
+    filter: (structure): structure is StructureContainer => structure.structureType === STRUCTURE_CONTAINER
+  }).length > 0;
+}
+
+function walkableAdjacentPositions(position: RoomPosition): number {
+  let walkable = 0;
+
+  for (let dx = -1; dx <= 1; dx += 1) {
+    for (let dy = -1; dy <= 1; dy += 1) {
+      if (dx === 0 && dy === 0) {
+        continue;
+      }
+
+      const x = position.x + dx;
+      const y = position.y + dy;
+      if (x <= 0 || x >= 49 || y <= 0 || y >= 49) {
+        continue;
+      }
+
+      const terrain = new RoomPosition(x, y, position.roomName).lookFor(LOOK_TERRAIN)[0];
+      if (terrain !== "wall") {
+        walkable += 1;
+      }
+    }
+  }
+
+  return walkable;
 }
 
 function desiredBuilderCount(room: Room): number {
