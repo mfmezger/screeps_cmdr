@@ -2,12 +2,14 @@ import { roomNeedsDefender } from "./defense";
 import { countExpansionCreeps, getExpansionTargetRoom, isExpansionReady } from "./expansion";
 import { roomHasRepairTargets } from "./repair";
 import { getNextScoutTarget, shouldSpawnScout } from "./scouting";
+import { getSafeSources } from "./sources";
 
-const ROLE_PRIORITY: CreepRole[] = ["defender", "miner", "hauler", "builder", "upgrader", "repairer"];
+const ROLE_PRIORITY: CreepRole[] = ["hauler", "builder", "upgrader", "repairer"];
 
 interface SpawnRequest {
   role: CreepRole;
   targetRoom?: string;
+  sourceId?: Id<Source>;
   blockLowerPriority?: boolean;
 }
 
@@ -36,7 +38,8 @@ function spawnCreep(spawn: StructureSpawn, request: SpawnRequest, body: BodyPart
     memory: {
       role: request.role,
       working: false,
-      targetRoom: request.targetRoom
+      targetRoom: request.targetRoom,
+      sourceId: request.sourceId
     }
   });
 
@@ -49,20 +52,26 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
   const queue: SpawnRequest[] = [];
   const creeps = room.find(FIND_MY_CREEPS);
   const roleCounts = countViableRoles(creeps);
-  const sources = room.find(FIND_SOURCES);
+  const safeSources = getSafeSources(room);
 
   if (roleCounts.harvester === 0 && roleCounts.miner === 0) {
     return [{ role: "harvester", blockLowerPriority: true }];
   }
 
+  if (roomNeedsDefender(room) && roleCounts.defender < 1) {
+    queue.push({ role: "defender", blockLowerPriority: true });
+  }
+
+  queue.push(...buildMinerQueue(room, creeps));
+
   const desiredCounts: Record<CreepRole, number> = {
     harvester: 0,
-    miner: desiredMinerCount(room),
-    hauler: sources.length > 0 ? Math.max(1, sources.length) : 0,
+    miner: 0,
+    hauler: safeSources.length > 0 ? Math.max(1, safeSources.length) : 0,
     upgrader: desiredUpgraderCount(room),
     builder: desiredBuilderCount(room),
     repairer: roomHasRepairTargets(room) ? 1 : 0,
-    defender: roomNeedsDefender(room) ? 1 : 0,
+    defender: 0,
     claimer: 0,
     pioneer: 0,
     scout: 0
@@ -82,6 +91,26 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
   }
 
   return queue;
+}
+
+function buildMinerQueue(room: Room, creeps: Creep[]): SpawnRequest[] {
+  return getSafeSources(room).flatMap(source => {
+    const desired = desiredMinersForSource(room, source);
+    const assigned = countViableMinersForSource(creeps, source);
+    if (assigned >= desired) {
+      return [];
+    }
+
+    return [{ role: "miner", sourceId: source.id, blockLowerPriority: true }];
+  });
+}
+
+function countViableMinersForSource(creeps: Creep[], source: Source): number {
+  return creeps.filter(creep =>
+    creep.memory.role === "miner" &&
+    creep.memory.sourceId === source.id &&
+    isViableForRole(creep, "miner")
+  ).length;
 }
 
 function buildExpansionQueue(room: Room): SpawnRequest[] {
@@ -155,12 +184,6 @@ function replacementLeadTime(role: CreepRole): number {
   }
 }
 
-function desiredMinerCount(room: Room): number {
-  return room.find(FIND_SOURCES).reduce((total, source) => {
-    return total + desiredMinersForSource(room, source);
-  }, 0);
-}
-
 function desiredMinersForSource(room: Room, source: Source): number {
   if (room.energyCapacityAvailable >= 550) {
     return 1;
@@ -231,11 +254,28 @@ function desiredUpgraderCount(room: Room): number {
     return 1;
   }
 
+  const storedEnergy = storedRoomEnergy(room);
+  if (storedEnergy >= 5000 && room.energyCapacityAvailable >= 800) {
+    return 4;
+  }
+
+  if (storedEnergy >= 2500 && room.energyCapacityAvailable >= 550) {
+    return 3;
+  }
+
   if (room.energyAvailable >= room.energyCapacityAvailable * 0.8 && room.energyCapacityAvailable >= 550) {
     return 2;
   }
 
   return 1;
+}
+
+function storedRoomEnergy(room: Room): number {
+  const containerEnergy = room.find(FIND_STRUCTURES, {
+    filter: (structure): structure is StructureContainer => structure.structureType === STRUCTURE_CONTAINER
+  }).reduce((total, container) => total + container.store.getUsedCapacity(RESOURCE_ENERGY), 0);
+
+  return containerEnergy + (room.storage?.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0);
 }
 
 function hasImportantConstruction(room: Room): boolean {

@@ -4,10 +4,14 @@ const SOURCE_KEEPER_AVOID_RANGE = 6;
 const HOSTILE_AVOID_RANGE = 5;
 const ASSIGNMENT_PENALTY = 25;
 
+export function getSafeSources(room: Room): Source[] {
+  return room.find(FIND_SOURCES).filter(isSafeSource);
+}
+
 export function getAssignedSource(creep: Creep): Source | undefined {
   if (creep.memory.sourceId) {
     const source = Game.getObjectById(creep.memory.sourceId);
-    if (source && isSafeSource(source)) {
+    if (source && isSafeSource(source) && !shouldReassignSource(creep, source)) {
       return source;
     }
 
@@ -30,7 +34,7 @@ export function findClosestSafeActiveSource(creep: Creep): Source | undefined {
 }
 
 function chooseSource(creep: Creep): Source | undefined {
-  const sources = creep.room.find(FIND_SOURCES).filter(isSafeSource);
+  const sources = getSafeSources(creep.room);
   if (sources.length === 0) {
     return undefined;
   }
@@ -38,7 +42,22 @@ function chooseSource(creep: Creep): Source | undefined {
   return sources.sort((left, right) => sourceScore(creep, left) - sourceScore(creep, right))[0];
 }
 
+function shouldReassignSource(creep: Creep, source: Source): boolean {
+  if (creep.memory.role !== "miner") {
+    return false;
+  }
+
+  const currentCount = assignedCount(source);
+  return getSafeSources(creep.room).some(otherSource =>
+    otherSource.id !== source.id && assignedCount(otherSource) + 1 < currentCount
+  );
+}
+
 function sourceScore(creep: Creep, source: Source): number {
+  if (creep.memory.role === "miner") {
+    return assignedCount(source) * 1000 + pathDistance(creep, source);
+  }
+
   return pathDistance(creep, source) + assignedCount(source) * ASSIGNMENT_PENALTY;
 }
 
@@ -51,7 +70,7 @@ function pathDistance(creep: Creep, source: Source): number {
   return path.length > 0 ? path.length : creep.pos.getRangeTo(source);
 }
 
-function isSafeSource(source: Source): boolean {
+export function isSafeSource(source: Source): boolean {
   const keeperLair = source.pos.findInRange(FIND_STRUCTURES, SOURCE_KEEPER_AVOID_RANGE, {
     filter: structure => structure.structureType === STRUCTURE_KEEPER_LAIR
   })[0];

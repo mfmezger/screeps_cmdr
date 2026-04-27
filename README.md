@@ -19,7 +19,9 @@ The current goal is not to be a huge framework. It is a small bot that can boots
   - defenders when hostiles appear and no tower exists
   - scouts for expansion discovery
 - Adds replacement creeps before important creeps expire.
+- Assigns miners to specific safe sources so source usage stays balanced.
 - Can add a second miner to underworked container sources at low energy capacity.
+- Converts full containers/storage into faster upgrading by adding upgrader capacity when construction is done.
 - Avoids Source Keeper sources and ignores Source Keepers for now.
 
 ### Energy logistics
@@ -54,7 +56,7 @@ The current goal is not to be a huge framework. It is a small bot that can boots
 
 ### Scouting and expansion
 
-- Scouts adjacent rooms automatically.
+- Scouts nearby rooms automatically, including frontier rooms beyond immediate exits.
 - Scouting data is stored in `Memory.scouting`.
 - Automatic expansion can pick a safe, unowned, unreserved, two-source room.
 - Manual flags named `Expand` or `Claim` override automatic expansion target selection.
