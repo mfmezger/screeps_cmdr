@@ -21,6 +21,7 @@ export function runRoomPlanning(room: Room): void {
     return;
   }
 
+  remainingSites -= planDefensiveRamparts(room, remainingSites);
   remainingSites -= planTower(room, remainingSites);
   remainingSites -= planExtensions(room, remainingSites);
   remainingSites -= planSourceContainers(room, remainingSites);
@@ -54,6 +55,45 @@ function shouldPlanRoads(room: Room): boolean {
   }
 
   return true;
+}
+
+function planDefensiveRamparts(room: Room, maxSites: number): number {
+  if (maxSites <= 0 || !room.controller || room.controller.level < 2) {
+    return 0;
+  }
+
+  let created = 0;
+  for (const target of defensiveRampartTargets(room)) {
+    if (created >= maxSites) {
+      return created;
+    }
+
+    if (!hasRampartOrSite(target.pos) && target.pos.createConstructionSite(STRUCTURE_RAMPART) === OK) {
+      created += 1;
+    }
+  }
+
+  return created;
+}
+
+function defensiveRampartTargets(room: Room): Structure[] {
+  const targets: Structure[] = [];
+  targets.push(...room.find(FIND_MY_SPAWNS));
+
+  targets.push(...room.find(FIND_MY_STRUCTURES, {
+    filter: structure => structure.structureType === STRUCTURE_TOWER
+  }));
+
+  return targets;
+}
+
+function hasRampartOrSite(position: RoomPosition): boolean {
+  const rampart = position.lookFor(LOOK_STRUCTURES).some(structure => structure.structureType === STRUCTURE_RAMPART);
+  if (rampart) {
+    return true;
+  }
+
+  return position.lookFor(LOOK_CONSTRUCTION_SITES).some(site => site.structureType === STRUCTURE_RAMPART);
 }
 
 function planSourceContainers(room: Room, maxSites: number): number {

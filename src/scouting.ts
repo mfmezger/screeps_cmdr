@@ -1,3 +1,5 @@
+import { isThreatOwner } from "./threats";
+
 const SCOUT_TTL = 1500;
 const MAX_SCOUT_DISTANCE = 3;
 
@@ -81,7 +83,7 @@ function frontierRooms(homeRoom: Room): string[] {
       continue;
     }
 
-    if ((room.keeperLairs ?? 0) > 0 || room.hostiles > 0 || room.owner) {
+    if ((room.keeperLairs ?? 0) > 0 || room.hostiles > 0 || room.owner || isThreatOwner(room.owner)) {
       continue;
     }
 
@@ -131,6 +133,8 @@ function isClaimable(room: ScoutedRoomMemory): boolean {
     !room.reservation &&
     room.hostiles === 0 &&
     (room.keeperLairs ?? 0) === 0 &&
+    !isThreatOwner(room.owner) &&
+    !isThreatOwner(room.reservation) &&
     room.sources >= 2;
 }
 

@@ -1,5 +1,5 @@
-import { collectEnergy, updateWorkingState } from "../energy";
 import { roomHasNonKeeperHostiles } from "../defense";
+import { collectEnergy, updateWorkingState } from "../energy";
 
 const IDLE_RANGE = 3;
 
@@ -7,6 +7,8 @@ export function runHauler(creep: Creep): void {
   updateWorkingState(creep);
 
   if (!creep.memory.working) {
+    delete creep.memory.deliveryTargetId;
+
     if (hasAvailableEnergy(creep.room)) {
       collectEnergy(creep);
       return;
@@ -16,7 +18,7 @@ export function runHauler(creep: Creep): void {
     return;
   }
 
-  const target = findDeliveryTarget(creep);
+  const target = getDeliveryTarget(creep);
   if (target) {
     if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
       creep.moveTo(target, { visualizePathStyle: { stroke: "#ffaa00" } });
@@ -24,7 +26,28 @@ export function runHauler(creep: Creep): void {
     return;
   }
 
+  delete creep.memory.deliveryTargetId;
   moveNearDeliveryPoint(creep);
+}
+
+function getDeliveryTarget(
+  creep: Creep
+): StructureExtension | StructureSpawn | StructureTower | StructureContainer | StructureStorage | undefined {
+  if (creep.memory.deliveryTargetId) {
+    const target = Game.getObjectById(creep.memory.deliveryTargetId);
+    if (target && target.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+      return target;
+    }
+
+    delete creep.memory.deliveryTargetId;
+  }
+
+  const target = findDeliveryTarget(creep);
+  if (target) {
+    creep.memory.deliveryTargetId = target.id;
+  }
+
+  return target;
 }
 
 function hasAvailableEnergy(room: Room): boolean {

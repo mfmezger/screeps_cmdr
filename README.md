@@ -47,6 +47,7 @@ The current goal is not to be a huge framework. It is a small bot that can boots
   4. roads
   5. everything else
 - Repair thresholds are lower while important construction exists so early energy is not wasted on minor road damage.
+- Basic ramparts are planned over spawns and towers, then maintained to modest early thresholds.
 
 ### Defense
 
@@ -56,12 +57,14 @@ The current goal is not to be a huge framework. It is a small bot that can boots
 - Safe mode can activate when dangerous non-Source-Keeper hostiles appear and no charged tower is available.
 - Basic defenders are spawned for non-Source-Keeper hostiles when tower defense is missing or low on energy.
 - During attacks, haulers prioritize tower refills and expansion/scouting/non-critical build/repair work pauses.
+- Hostile player names are remembered in `Memory.threats`.
 
 ### Scouting and expansion
 
 - Scouts nearby rooms automatically, including frontier rooms beyond immediate exits.
 - Scouting data is stored in `Memory.scouting`.
 - Automatic expansion can pick a safe, unowned, unreserved, two-source room.
+- Known threat-owned rooms are avoided for scout frontier expansion.
 - Manual flags named `Expand` or `Claim` override automatic expansion target selection.
 - Expansion waits until the home room is ready.
 

@@ -109,15 +109,24 @@ declare global {
     rooms: Record<string, ScoutedRoomMemory>;
   }
 
+  interface ThreatMemory {
+    username: string;
+    lastSeen: number;
+    rooms: Record<string, number>;
+  }
+
   interface CreepMemory {
     role: CreepRole;
     working?: boolean;
     sourceId?: Id<Source>;
     targetRoom?: string;
+    deliveryTargetId?: Id<StructureExtension | StructureSpawn | StructureTower | StructureContainer | StructureStorage>;
+    buildTargetId?: Id<ConstructionSite>;
   }
 
   interface Memory {
     stats?: BotStatsMemory;
     scouting?: ScoutingMemory;
+    threats?: Record<string, ThreatMemory>;
   }
 }

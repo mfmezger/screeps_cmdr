@@ -38,7 +38,7 @@ function findClosestRepairTarget(pos: RoomPosition, room: Room, kind: RepairKind
 }
 
 function repairPriority(structure: Structure, kind: RepairKind): number | undefined {
-  if (structure.structureType === STRUCTURE_WALL || structure.structureType === STRUCTURE_RAMPART) {
+  if (structure.structureType === STRUCTURE_WALL) {
     return undefined;
   }
 
@@ -48,18 +48,26 @@ function repairPriority(structure: Structure, kind: RepairKind): number | undefi
     return undefined;
   }
 
-  if (structure.structureType === STRUCTURE_CONTAINER) {
+  if (structure.structureType === STRUCTURE_RAMPART) {
     return 1;
   }
 
-  if (structure.structureType === STRUCTURE_ROAD) {
+  if (structure.structureType === STRUCTURE_CONTAINER) {
     return 2;
   }
 
-  return 3;
+  if (structure.structureType === STRUCTURE_ROAD) {
+    return 3;
+  }
+
+  return 4;
 }
 
 function creepRepairThreshold(structure: Structure): number {
+  if (structure.structureType === STRUCTURE_RAMPART) {
+    return Math.min(0.2, 1500 / structure.hitsMax);
+  }
+
   if (hasImportantConstruction(structure.room)) {
     return earlyRepairThreshold(structure);
   }
@@ -76,6 +84,10 @@ function creepRepairThreshold(structure: Structure): number {
 }
 
 function earlyRepairThreshold(structure: Structure): number {
+  if (structure.structureType === STRUCTURE_RAMPART) {
+    return Math.min(0.15, 1000 / structure.hitsMax);
+  }
+
   if (structure.structureType === STRUCTURE_CONTAINER) {
     return 0.55;
   }
@@ -88,6 +100,10 @@ function earlyRepairThreshold(structure: Structure): number {
 }
 
 function towerRepairThreshold(structure: Structure): number {
+  if (structure.structureType === STRUCTURE_RAMPART) {
+    return Math.min(0.12, 1200 / structure.hitsMax);
+  }
+
   if (hasImportantConstruction(structure.room)) {
     return 0.25;
   }
@@ -108,6 +124,7 @@ function hasImportantConstruction(room: Room): boolean {
     filter: site =>
       site.structureType === STRUCTURE_EXTENSION ||
       site.structureType === STRUCTURE_TOWER ||
+      site.structureType === STRUCTURE_RAMPART ||
       site.structureType === STRUCTURE_CONTAINER ||
       site.structureType === STRUCTURE_STORAGE
   }).length > 0;

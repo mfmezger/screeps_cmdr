@@ -14,6 +14,7 @@ import { runUpgrader } from "./roles/upgrader";
 import { recordScouting } from "./scouting";
 import { runSpawner } from "./spawning";
 import { recordStats } from "./stats";
+import { recordThreats } from "./threats";
 import { runTowers } from "./towers";
 import { runRoomVisuals } from "./visuals";
 
@@ -23,6 +24,7 @@ export function loop(): void {
   for (const roomName in Game.rooms) {
     const room = Game.rooms[roomName];
     recordScouting(room);
+    recordThreats(room);
     runDefense(room);
     runRoomPlanning(room);
     runTowers(room);
