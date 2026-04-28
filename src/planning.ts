@@ -21,8 +21,8 @@ export function runRoomPlanning(room: Room): void {
     return;
   }
 
-  remainingSites -= planExtensions(room, remainingSites);
   remainingSites -= planTower(room, remainingSites);
+  remainingSites -= planExtensions(room, remainingSites);
   remainingSites -= planSourceContainers(room, remainingSites);
   remainingSites -= planSpawnContainer(room, remainingSites);
   remainingSites -= planStorage(room, remainingSites);

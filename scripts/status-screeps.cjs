@@ -135,6 +135,14 @@ function roomInsights(room) {
     insights.push(`${room.hostiles} hostile creep(s) present`);
   }
 
+  if (room.controller && room.controller.level >= 3 && room.towers.count === 0) {
+    insights.push("RCL3+ without tower defense");
+  }
+
+  if (room.hostiles > 0 && room.towers.energy < 150) {
+    insights.push("hostiles present and tower energy is low");
+  }
+
   if (room.energyCapacityAvailable > 0 && room.creeps.miner === 0 && room.creeps.harvester === 0) {
     insights.push("no miner/harvester active");
   }

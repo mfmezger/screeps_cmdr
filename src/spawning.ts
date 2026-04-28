@@ -1,4 +1,4 @@
-import { roomNeedsDefender } from "./defense";
+import { roomHasNonKeeperHostiles, roomNeedsDefender } from "./defense";
 import { countExpansionCreeps, getExpansionTargetRoom, isExpansionReady } from "./expansion";
 import { roomHasRepairTargets } from "./repair";
 import { getNextScoutTarget, shouldSpawnScout } from "./scouting";
@@ -69,8 +69,8 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
     miner: 0,
     hauler: safeSources.length > 0 ? Math.max(1, safeSources.length) : 0,
     upgrader: desiredUpgraderCount(room),
-    builder: desiredBuilderCount(room),
-    repairer: roomHasRepairTargets(room) ? 1 : 0,
+    builder: roomHasNonKeeperHostiles(room) ? 0 : desiredBuilderCount(room),
+    repairer: roomHasNonKeeperHostiles(room) ? 0 : roomHasRepairTargets(room) ? 1 : 0,
     defender: 0,
     claimer: 0,
     pioneer: 0,
@@ -81,6 +81,10 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
     if (roleCounts[role] < desiredCounts[role]) {
       queue.push({ role, blockLowerPriority: true });
     }
+  }
+
+  if (roomHasNonKeeperHostiles(room)) {
+    return queue;
   }
 
   queue.push(...buildExpansionQueue(room));

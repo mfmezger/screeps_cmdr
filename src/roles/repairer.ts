@@ -1,3 +1,4 @@
+import { roomHasNonKeeperHostiles } from "../defense";
 import { collectWorkerEnergy, updateWorkingState } from "../energy";
 import { findRepairTarget } from "../repair";
 
@@ -6,6 +7,10 @@ export function runRepairer(creep: Creep): void {
 
   if (!creep.memory.working) {
     collectWorkerEnergy(creep);
+    return;
+  }
+
+  if (roomHasNonKeeperHostiles(creep.room)) {
     return;
   }
 

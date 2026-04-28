@@ -1,4 +1,5 @@
 import { collectWorkerEnergy, updateWorkingState } from "../energy";
+import { roomHasNonKeeperHostiles } from "../defense";
 
 const PRIORITY_STRUCTURE_GROUPS: BuildableStructureConstant[][] = [
   [STRUCTURE_SPAWN, STRUCTURE_EXTENSION],
@@ -12,6 +13,10 @@ export function runBuilder(creep: Creep): void {
 
   if (!creep.memory.working) {
     collectWorkerEnergy(creep);
+    return;
+  }
+
+  if (roomHasNonKeeperHostiles(creep.room)) {
     return;
   }
 

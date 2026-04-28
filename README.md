@@ -50,9 +50,12 @@ The current goal is not to be a huge framework. It is a small bot that can boots
 
 ### Defense
 
-- Towers attack hostile creeps first, then repair if they have spare energy.
-- Safe mode can activate when dangerous non-Source-Keeper hostiles appear and no tower is available.
-- Basic defenders are spawned for non-Source-Keeper hostiles when there is no tower.
+- Tower construction is prioritized as soon as RCL3 unlocks it.
+- Towers prioritize healers, then attackers/ranged attackers, then other hostile creeps.
+- Towers heal damaged friendly creeps before spending spare energy on repairs.
+- Safe mode can activate when dangerous non-Source-Keeper hostiles appear and no charged tower is available.
+- Basic defenders are spawned for non-Source-Keeper hostiles when tower defense is missing or low on energy.
+- During attacks, haulers prioritize tower refills and expansion/scouting/non-critical build/repair work pauses.
 
 ### Scouting and expansion
 
