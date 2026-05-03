@@ -1,4 +1,4 @@
-import { roomHasNonKeeperHostiles } from "../defense";
+import { roomCanWorkUnderThreat, roomIsInEmergencyDefense } from "../defense";
 import { collectWorkerEnergy, updateWorkingState } from "../energy";
 
 const PRIORITY_STRUCTURE_GROUPS: BuildableStructureConstant[][] = [
@@ -6,6 +6,14 @@ const PRIORITY_STRUCTURE_GROUPS: BuildableStructureConstant[][] = [
   [STRUCTURE_TOWER],
   [STRUCTURE_CONTAINER, STRUCTURE_STORAGE],
   [STRUCTURE_RAMPART],
+  [STRUCTURE_ROAD]
+];
+
+const EMERGENCY_PRIORITY_STRUCTURE_GROUPS: BuildableStructureConstant[][] = [
+  [STRUCTURE_TOWER],
+  [STRUCTURE_RAMPART],
+  [STRUCTURE_SPAWN, STRUCTURE_EXTENSION],
+  [STRUCTURE_CONTAINER, STRUCTURE_STORAGE],
   [STRUCTURE_ROAD]
 ];
 
@@ -18,7 +26,7 @@ export function runBuilder(creep: Creep): void {
     return;
   }
 
-  if (roomHasNonKeeperHostiles(creep.room)) {
+  if (!roomCanWorkUnderThreat(creep.room)) {
     return;
   }
 
@@ -56,7 +64,11 @@ function getBuildTarget(creep: Creep): ConstructionSite | undefined {
 }
 
 function findBuildTarget(creep: Creep): ConstructionSite | undefined {
-  for (const structureTypes of PRIORITY_STRUCTURE_GROUPS) {
+  const priorityGroups = roomIsInEmergencyDefense(creep.room)
+    ? EMERGENCY_PRIORITY_STRUCTURE_GROUPS
+    : PRIORITY_STRUCTURE_GROUPS;
+
+  for (const structureTypes of priorityGroups) {
     const target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES, {
       filter: site => structureTypes.includes(site.structureType)
     });

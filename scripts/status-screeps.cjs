@@ -85,11 +85,15 @@ function printRoom(room, history) {
   console.log(`  Energy: ${room.energyAvailable}/${room.energyCapacityAvailable} (${percent(room.energyAvailable, room.energyCapacityAvailable)})`);
 
   if (room.controller) {
-    console.log(`  Controller: RCL ${room.controller.level}, ${percent(room.controller.progress, room.controller.progressTotal)}`);
+    const safeMode = room.controller.safeMode ? `, safe mode ${room.controller.safeMode}` : "";
+    console.log(`  Controller: RCL ${room.controller.level}, ${percent(room.controller.progress, room.controller.progressTotal)}${safeMode}`);
   }
 
   console.log(`  Creeps: ${formatCreeps(room.creeps)}`);
-  console.log(`  Sites: ${room.constructionSites}, repair targets: ${room.repairTargets}, hostiles: ${room.hostiles}`);
+  if (room.structures) {
+    console.log(`  Structures: spawns=${room.structures.spawns}, extensions=${room.structures.extensions}, roads=${room.structures.roads}, ramparts=${room.structures.ramparts}`);
+  }
+  console.log(`  Sites: ${room.constructionSites}${formatSiteBreakdown(room.constructionSitesByType)}, repair targets: ${room.repairTargets}, hostiles: ${room.hostiles}${formatHostiles(room)}`);
   console.log(`  Towers: ${room.towers.count}, energy ${room.towers.energy}/${room.towers.capacity}`);
   console.log(`  Containers: ${room.containers.count}, energy ${room.containers.energy}/${room.containers.capacity}`);
   if (room.storage) {
@@ -135,6 +139,10 @@ function roomInsights(room) {
     insights.push(`${room.hostiles} hostile creep(s) present`);
   }
 
+  if (room.structures && room.controller && room.structures.spawns === 0) {
+    insights.push("owned room has no spawn; manual recovery required");
+  }
+
   if (room.controller && room.controller.level >= 3 && room.towers.count === 0) {
     insights.push("RCL3+ without tower defense");
   }
@@ -164,6 +172,30 @@ function roomInsights(room) {
   }
 
   return insights;
+}
+
+function formatSiteBreakdown(sitesByType) {
+  if (!sitesByType || Object.keys(sitesByType).length === 0) {
+    return "";
+  }
+
+  return ` (${Object.entries(sitesByType).map(([type, count]) => `${type}=${count}`).join(", ")})`;
+}
+
+function formatHostiles(room) {
+  const parts = [];
+  if (room.hostileOwners && Object.keys(room.hostileOwners).length > 0) {
+    parts.push(Object.entries(room.hostileOwners).map(([owner, count]) => `${owner}=${count}`).join(", "));
+  }
+  if (room.hostileThreatScore) {
+    parts.push(`threat=${room.hostileThreatScore}`);
+  }
+  if (room.hostileBodyParts) {
+    const body = room.hostileBodyParts;
+    parts.push(`parts A=${body.attack}/R=${body.rangedAttack}/H=${body.heal}/W=${body.work}`);
+  }
+
+  return parts.length > 0 ? ` [${parts.join("; ")}]` : "";
 }
 
 function formatCreeps(creeps) {

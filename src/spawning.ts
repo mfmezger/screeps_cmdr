@@ -1,4 +1,10 @@
-import { roomHasNonKeeperHostiles, roomNeedsDefender } from "./defense";
+import {
+  desiredDefenderCount,
+  roomCanWorkUnderThreat,
+  roomHasDangerousHostiles,
+  roomIsInEmergencyDefense,
+  roomNeedsDefender
+} from "./defense";
 import { countExpansionCreeps, getExpansionTargetRoom, isExpansionReady } from "./expansion";
 import { roomHasRepairTargets } from "./repair";
 import { getNextScoutTarget, shouldSpawnScout } from "./scouting";
@@ -58,7 +64,7 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
     return [{ role: "harvester", blockLowerPriority: true }];
   }
 
-  if (roomNeedsDefender(room) && roleCounts.defender < 1) {
+  if (roomNeedsDefender(room) && roleCounts.defender < desiredDefenderCount(room)) {
     queue.push({ role: "defender", blockLowerPriority: true });
   }
 
@@ -69,8 +75,8 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
     miner: 0,
     hauler: safeSources.length > 0 ? Math.max(1, safeSources.length) : 0,
     upgrader: desiredUpgraderCount(room),
-    builder: roomHasNonKeeperHostiles(room) ? 0 : desiredBuilderCount(room),
-    repairer: roomHasNonKeeperHostiles(room) ? 0 : roomHasRepairTargets(room) ? 1 : 0,
+    builder: roomCanWorkUnderThreat(room) ? desiredBuilderCount(room) : 0,
+    repairer: roomCanWorkUnderThreat(room) ? roomHasRepairTargets(room) ? 1 : 0 : 0,
     defender: 0,
     claimer: 0,
     pioneer: 0,
@@ -83,7 +89,7 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
     }
   }
 
-  if (roomHasNonKeeperHostiles(room)) {
+  if (roomHasDangerousHostiles(room)) {
     return queue;
   }
 
@@ -241,6 +247,10 @@ function desiredBuilderCount(room: Room): number {
     return 0;
   }
 
+  if (roomIsInEmergencyDefense(room)) {
+    return 2;
+  }
+
   const importantSites = sites.filter(site => isImportantConstruction(site)).length;
   if (importantSites > 0 && room.energyAvailable >= room.energyCapacityAvailable * 0.8) {
     return 2;
@@ -254,6 +264,10 @@ function desiredBuilderCount(room: Room): number {
 }
 
 function desiredUpgraderCount(room: Room): number {
+  if (roomIsInEmergencyDefense(room)) {
+    return 0;
+  }
+
   if (hasImportantConstruction(room)) {
     return 1;
   }
@@ -343,6 +357,14 @@ function chooseHaulerBody(energyAvailable: number): BodyPartConstant[] | undefin
 }
 
 function chooseDefenderBody(energyAvailable: number): BodyPartConstant[] | undefined {
+  if (energyAvailable >= 480) {
+    return [TOUGH, TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE];
+  }
+
+  if (energyAvailable >= 400) {
+    return [TOUGH, TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE];
+  }
+
   if (energyAvailable >= 260) {
     return [ATTACK, ATTACK, MOVE, MOVE];
   }

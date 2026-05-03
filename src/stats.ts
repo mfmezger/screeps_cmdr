@@ -1,4 +1,5 @@
 import { getExpansionTargetRoom, isExpansionReady } from "./expansion";
+import { findNonKeeperHostiles, hostileThreatScore } from "./hostiles";
 
 const HISTORY_INTERVAL = 20;
 const MAX_HISTORY = 250;
@@ -65,6 +66,7 @@ function buildRoomStats(room: Room): RoomStatsSnapshot {
     filter: (structure): structure is StructureContainer => structure.structureType === STRUCTURE_CONTAINER
   });
   const sources = room.find(FIND_SOURCES);
+  const hostiles = findNonKeeperHostiles(room);
 
   return {
     name: room.name,
@@ -74,13 +76,25 @@ function buildRoomStats(room: Room): RoomStatsSnapshot {
       ? {
           level: room.controller.level,
           progress: room.controller.progress,
-          progressTotal: room.controller.progressTotal
+          progressTotal: room.controller.progressTotal,
+          safeMode: room.controller.safeMode,
+          safeModeAvailable: room.controller.safeModeAvailable,
+          safeModeCooldown: room.controller.safeModeCooldown
         }
       : undefined,
     creeps: countCreepsByRole(creeps),
     constructionSites: constructionSites.length,
+    constructionSitesByType: countConstructionSitesByType(constructionSites),
     repairTargets: repairTargets.length,
-    hostiles: room.find(FIND_HOSTILE_CREEPS).length,
+    hostiles: hostiles.length,
+    hostileOwners: countHostileOwners(hostiles),
+    hostileBodyParts: {
+      attack: sumActiveBodyparts(hostiles, ATTACK),
+      rangedAttack: sumActiveBodyparts(hostiles, RANGED_ATTACK),
+      heal: sumActiveBodyparts(hostiles, HEAL),
+      work: sumActiveBodyparts(hostiles, WORK)
+    },
+    hostileThreatScore: sum(hostiles.map(hostileThreatScore)),
     towers: {
       count: towers.length,
       energy: sum(towers.map(tower => tower.store.getUsedCapacity(RESOURCE_ENERGY))),
@@ -90,6 +104,18 @@ function buildRoomStats(room: Room): RoomStatsSnapshot {
       count: containers.length,
       energy: sum(containers.map(container => container.store.getUsedCapacity(RESOURCE_ENERGY))),
       capacity: sum(containers.map(container => container.store.getCapacity(RESOURCE_ENERGY)))
+    },
+    structures: {
+      spawns: room.find(FIND_MY_SPAWNS).length,
+      extensions: room.find(FIND_MY_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_EXTENSION
+      }).length,
+      roads: room.find(FIND_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_ROAD
+      }).length,
+      ramparts: room.find(FIND_MY_STRUCTURES, {
+        filter: structure => structure.structureType === STRUCTURE_RAMPART
+      }).length
     },
     storage: room.storage
       ? {
@@ -105,6 +131,24 @@ function buildRoomStats(room: Room): RoomStatsSnapshot {
     })),
     expansionReady: isExpansionReady(room)
   };
+}
+
+function countConstructionSitesByType(sites: ConstructionSite[]): Record<string, number> {
+  return sites.reduce<Record<string, number>>((counts, site) => {
+    counts[site.structureType] = (counts[site.structureType] ?? 0) + 1;
+    return counts;
+  }, {});
+}
+
+function countHostileOwners(hostiles: Creep[]): Record<string, number> {
+  return hostiles.reduce<Record<string, number>>((counts, hostile) => {
+    counts[hostile.owner.username] = (counts[hostile.owner.username] ?? 0) + 1;
+    return counts;
+  }, {});
+}
+
+function sumActiveBodyparts(creeps: Creep[], bodyPart: BodyPartConstant): number {
+  return sum(creeps.map(creep => creep.getActiveBodyparts(bodyPart)));
 }
 
 function countCreepsByRole(creeps: Creep[]): Record<CreepRole, number> {

@@ -45,11 +45,23 @@ declare global {
       level: number;
       progress: number;
       progressTotal: number;
+      safeMode?: number;
+      safeModeAvailable?: number;
+      safeModeCooldown?: number;
     };
     creeps: CreepCountsByRole;
     constructionSites: number;
+    constructionSitesByType?: Record<string, number>;
     repairTargets: number;
     hostiles: number;
+    hostileOwners?: Record<string, number>;
+    hostileBodyParts?: {
+      attack: number;
+      rangedAttack: number;
+      heal: number;
+      work: number;
+    };
+    hostileThreatScore?: number;
     towers: {
       count: number;
       energy: number;
@@ -59,6 +71,12 @@ declare global {
       count: number;
       energy: number;
       capacity: number;
+    };
+    structures?: {
+      spawns: number;
+      extensions: number;
+      roads: number;
+      ramparts: number;
     };
     storage?: {
       energy: number;

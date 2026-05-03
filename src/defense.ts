@@ -1,19 +1,15 @@
-import { findNonKeeperHostiles } from "./hostiles";
+import { findDangerousHostiles, findNonKeeperHostiles } from "./hostiles";
 
 const MIN_DEFENSIVE_TOWER_ENERGY = 150;
 
 export function runDefense(room: Room): void {
-  const hostiles = findNonKeeperHostiles(room);
+  const hostiles = findDangerousHostiles(room);
   if (hostiles.length === 0) {
     return;
   }
 
   const controller = room.controller;
   if (!controller?.my || controller.safeMode || !controller.safeModeAvailable) {
-    return;
-  }
-
-  if (!hostiles.some(canDamageOrHeal)) {
     return;
   }
 
@@ -28,16 +24,40 @@ export function runDefense(room: Room): void {
 }
 
 export function roomNeedsDefender(room: Room): boolean {
-  const hostiles = findNonKeeperHostiles(room);
-  if (hostiles.length === 0) {
+  if (room.controller?.safeMode) {
     return false;
   }
 
-  return !roomHasChargedTower(room);
+  return roomHasDangerousHostiles(room) && !roomHasChargedTower(room);
+}
+
+export function desiredDefenderCount(room: Room): number {
+  if (!roomNeedsDefender(room)) {
+    return 0;
+  }
+
+  return Math.min(3, findDangerousHostiles(room).length);
 }
 
 export function roomHasNonKeeperHostiles(room: Room): boolean {
   return findNonKeeperHostiles(room).length > 0;
+}
+
+export function roomHasDangerousHostiles(room: Room): boolean {
+  return findDangerousHostiles(room).length > 0;
+}
+
+export function roomIsInEmergencyDefense(room: Room): boolean {
+  const controller = room.controller;
+  if (!controller?.my || controller.level < 3) {
+    return false;
+  }
+
+  return builtTowerCount(room) === 0;
+}
+
+export function roomCanWorkUnderThreat(room: Room): boolean {
+  return !roomHasDangerousHostiles(room) || Boolean(room.controller?.safeMode);
 }
 
 function roomHasChargedTower(room: Room): boolean {
@@ -48,9 +68,8 @@ function roomHasChargedTower(room: Room): boolean {
   }).length > 0;
 }
 
-function canDamageOrHeal(creep: Creep): boolean {
-  return creep.getActiveBodyparts(ATTACK) > 0 ||
-    creep.getActiveBodyparts(RANGED_ATTACK) > 0 ||
-    creep.getActiveBodyparts(HEAL) > 0 ||
-    creep.getActiveBodyparts(WORK) > 0;
+function builtTowerCount(room: Room): number {
+  return room.find(FIND_MY_STRUCTURES, {
+    filter: structure => structure.structureType === STRUCTURE_TOWER
+  }).length;
 }

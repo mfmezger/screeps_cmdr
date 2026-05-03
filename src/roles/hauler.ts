@@ -1,4 +1,4 @@
-import { roomHasNonKeeperHostiles } from "../defense";
+import { roomHasDangerousHostiles } from "../defense";
 import { collectEnergy, updateWorkingState } from "../energy";
 
 const IDLE_RANGE = 3;
@@ -118,7 +118,7 @@ function findPrimaryDeliveryPoint(room: Room): StructureSpawn | StructureStorage
 function findDeliveryTarget(
   creep: Creep
 ): StructureExtension | StructureSpawn | StructureTower | StructureContainer | StructureStorage | undefined {
-  if (roomHasNonKeeperHostiles(creep.room)) {
+  if (roomHasDangerousHostiles(creep.room)) {
     return findTower(creep) ?? findSpawnOrExtension(creep) ?? findBaseContainer(creep) ?? findStorage(creep);
   }
 

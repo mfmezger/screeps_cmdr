@@ -13,6 +13,10 @@ export function runRoomPlanning(room: Room): void {
     return;
   }
 
+  if (needsCriticalTowerSite(room)) {
+    planTower(room, 1);
+  }
+
   const siteCount = room.find(FIND_CONSTRUCTION_SITES).length;
   let remainingSites = Math.max(0, MAX_ROOM_SITES - siteCount);
   remainingSites = Math.min(remainingSites, MAX_NEW_SITES_PER_RUN);
@@ -21,8 +25,8 @@ export function runRoomPlanning(room: Room): void {
     return;
   }
 
-  remainingSites -= planDefensiveRamparts(room, remainingSites);
   remainingSites -= planTower(room, remainingSites);
+  remainingSites -= planDefensiveRamparts(room, remainingSites);
   remainingSites -= planExtensions(room, remainingSites);
   remainingSites -= planSourceContainers(room, remainingSites);
   remainingSites -= planSpawnContainer(room, remainingSites);
@@ -32,6 +36,14 @@ export function runRoomPlanning(room: Room): void {
   if (remainingSites > 0 && shouldPlanRoads(room)) {
     planRoads(room, remainingSites);
   }
+}
+
+function needsCriticalTowerSite(room: Room): boolean {
+  if (!room.controller || room.controller.level < 3) {
+    return false;
+  }
+
+  return plannedOrBuiltCount(room, STRUCTURE_TOWER) < allowedStructureCount(room, STRUCTURE_TOWER);
 }
 
 function shouldPlanRoads(room: Room): boolean {

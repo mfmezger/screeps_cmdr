@@ -9,3 +9,18 @@ export function findNonKeeperHostiles(room: Room): Creep[] {
     filter: hostile => !isSourceKeeper(hostile)
   });
 }
+
+export function findDangerousHostiles(room: Room): Creep[] {
+  return findNonKeeperHostiles(room).filter(isDangerousHostile);
+}
+
+export function isDangerousHostile(creep: Creep): boolean {
+  return hostileThreatScore(creep) > 0;
+}
+
+export function hostileThreatScore(creep: Creep): number {
+  return creep.getActiveBodyparts(ATTACK) * 3 +
+    creep.getActiveBodyparts(RANGED_ATTACK) * 3 +
+    creep.getActiveBodyparts(HEAL) * 4 +
+    creep.getActiveBodyparts(WORK);
+}
