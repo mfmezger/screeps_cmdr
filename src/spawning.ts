@@ -6,6 +6,7 @@ import {
   roomNeedsDefender
 } from "./defense";
 import { countExpansionCreeps, getExpansionTargetRoom, isExpansionReady } from "./expansion";
+import { shouldAnchorToHome } from "./home";
 import { roomHasRepairTargets } from "./repair";
 import { getNextScoutTarget, shouldSpawnScout } from "./scouting";
 import { getSafeSources } from "./sources";
@@ -44,6 +45,7 @@ function spawnCreep(spawn: StructureSpawn, request: SpawnRequest, body: BodyPart
     memory: {
       role: request.role,
       working: false,
+      homeRoom: shouldAnchorToHome(request.role) ? spawn.room.name : undefined,
       targetRoom: request.targetRoom,
       sourceId: request.sourceId
     }
@@ -56,7 +58,7 @@ function spawnCreep(spawn: StructureSpawn, request: SpawnRequest, body: BodyPart
 
 function buildSpawnQueue(room: Room): SpawnRequest[] {
   const queue: SpawnRequest[] = [];
-  const creeps = room.find(FIND_MY_CREEPS);
+  const creeps = findHomeCreeps(room);
   const roleCounts = countViableRoles(creeps);
   const safeSources = getSafeSources(room);
 
@@ -101,6 +103,12 @@ function buildSpawnQueue(room: Room): SpawnRequest[] {
   }
 
   return queue;
+}
+
+function findHomeCreeps(room: Room): Creep[] {
+  return Object.values(Game.creeps).filter(creep =>
+    creep.memory.homeRoom === room.name || (!creep.memory.homeRoom && creep.room.name === room.name)
+  );
 }
 
 function buildMinerQueue(room: Room, creeps: Creep[]): SpawnRequest[] {

@@ -1,6 +1,11 @@
 import { collectWorkerEnergy, updateWorkingState } from "../energy";
+import { returnToHomeRoom } from "../home";
 
 export function runUpgrader(creep: Creep): void {
+  if (returnToHomeRoom(creep)) {
+    return;
+  }
+
   updateWorkingState(creep);
 
   if (!creep.memory.working) {

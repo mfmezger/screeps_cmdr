@@ -139,7 +139,7 @@ function roomInsights(room) {
     insights.push(`${room.hostiles} hostile creep(s) present`);
   }
 
-  if (room.structures && room.controller && room.structures.spawns === 0) {
+  if (room.structures && room.controller && room.controller.my && room.structures.spawns === 0) {
     insights.push("owned room has no spawn; manual recovery required");
   }
 

@@ -77,6 +77,7 @@ function buildRoomStats(room: Room): RoomStatsSnapshot {
           level: room.controller.level,
           progress: room.controller.progress,
           progressTotal: room.controller.progressTotal,
+          my: room.controller.my,
           safeMode: room.controller.safeMode,
           safeModeAvailable: room.controller.safeModeAvailable,
           safeModeCooldown: room.controller.safeModeCooldown

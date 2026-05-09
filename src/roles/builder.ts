@@ -1,5 +1,6 @@
 import { roomCanWorkUnderThreat, roomIsInEmergencyDefense } from "../defense";
 import { collectWorkerEnergy, updateWorkingState } from "../energy";
+import { returnToHomeRoom } from "../home";
 
 const PRIORITY_STRUCTURE_GROUPS: BuildableStructureConstant[][] = [
   [STRUCTURE_SPAWN, STRUCTURE_EXTENSION],
@@ -18,6 +19,10 @@ const EMERGENCY_PRIORITY_STRUCTURE_GROUPS: BuildableStructureConstant[][] = [
 ];
 
 export function runBuilder(creep: Creep): void {
+  if (returnToHomeRoom(creep)) {
+    return;
+  }
+
   updateWorkingState(creep);
 
   if (!creep.memory.working) {

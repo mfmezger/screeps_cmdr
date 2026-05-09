@@ -1,9 +1,14 @@
 import { roomHasDangerousHostiles } from "../defense";
 import { collectEnergy, updateWorkingState } from "../energy";
+import { returnToHomeRoom } from "../home";
 
 const IDLE_RANGE = 3;
 
 export function runHauler(creep: Creep): void {
+  if (returnToHomeRoom(creep)) {
+    return;
+  }
+
   updateWorkingState(creep);
 
   if (!creep.memory.working) {

@@ -9,9 +9,14 @@ export function getSafeSources(room: Room): Source[] {
 }
 
 export function getAssignedSource(creep: Creep): Source | undefined {
+  if (creep.memory.role !== "miner") {
+    delete creep.memory.sourceId;
+    return findClosestSafeActiveSource(creep);
+  }
+
   if (creep.memory.sourceId) {
     const source = Game.getObjectById(creep.memory.sourceId);
-    if (source && isSafeSource(source) && !shouldReassignSource(creep, source)) {
+    if (source && source.pos.roomName === creep.room.name && isSafeSource(source) && !shouldReassignSource(creep, source)) {
       return source;
     }
 
@@ -85,5 +90,7 @@ export function isSafeSource(source: Source): boolean {
 }
 
 function assignedCount(source: Source): number {
-  return Object.values(Game.creeps).filter(creep => creep.memory.sourceId === source.id).length;
+  return Object.values(Game.creeps).filter(creep =>
+    creep.memory.role === "miner" && creep.memory.sourceId === source.id
+  ).length;
 }

@@ -1,6 +1,11 @@
+import { returnToHomeRoom } from "../home";
 import { findDangerousHostiles, isSourceKeeper } from "../hostiles";
 
 export function runDefender(creep: Creep): void {
+  if (returnToHomeRoom(creep)) {
+    return;
+  }
+
   const dangerousTargets = findDangerousHostiles(creep.room);
   const target = creep.pos.findClosestByPath(dangerousTargets) ?? creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS, {
     filter: hostile => !isSourceKeeper(hostile)

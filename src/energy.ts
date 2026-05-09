@@ -134,7 +134,7 @@ function withdrawFromContainer(creep: Creep, minEnergy: number): boolean {
 }
 
 function harvestSource(creep: Creep): boolean {
-  const assignedSource = getAssignedSource(creep);
+  const assignedSource = creep.memory.role === "miner" ? getAssignedSource(creep) : undefined;
   const target = assignedSource && assignedSource.energy > 0
     ? assignedSource
     : findClosestSafeActiveSource(creep);

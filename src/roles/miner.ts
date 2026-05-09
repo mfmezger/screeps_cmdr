@@ -1,6 +1,11 @@
+import { returnToHomeRoom } from "../home";
 import { getAssignedSource } from "../sources";
 
 export function runMiner(creep: Creep): void {
+  if (returnToHomeRoom(creep)) {
+    return;
+  }
+
   const source = getAssignedSource(creep);
   if (!source) {
     return;

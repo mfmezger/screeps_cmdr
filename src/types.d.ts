@@ -45,6 +45,7 @@ declare global {
       level: number;
       progress: number;
       progressTotal: number;
+      my?: boolean;
       safeMode?: number;
       safeModeAvailable?: number;
       safeModeCooldown?: number;
@@ -137,6 +138,7 @@ declare global {
     role: CreepRole;
     working?: boolean;
     sourceId?: Id<Source>;
+    homeRoom?: string;
     targetRoom?: string;
     deliveryTargetId?: Id<StructureExtension | StructureSpawn | StructureTower | StructureContainer | StructureStorage>;
     buildTargetId?: Id<ConstructionSite>;

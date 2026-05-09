@@ -1,6 +1,11 @@
 import { collectEnergy } from "../energy";
+import { returnToHomeRoom } from "../home";
 
 export function runHarvester(creep: Creep): void {
+  if (returnToHomeRoom(creep)) {
+    return;
+  }
+
   if (creep.store.getFreeCapacity() > 0) {
     collectEnergy(creep);
     return;
